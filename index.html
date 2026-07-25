@@ -187,19 +187,13 @@
           <!-- File Inputs Section -->
           <div class="space-y-2 pt-1 border-t">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">🖼️ ဓာတ်ပုံတင်ရန် (အလိုအလျောက် ဆိုက်ချုံ့ပေးမည်)</label>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">🖼️ ဓာတ်ပုံတင်ရန် (Firestore သို့ တိုက်ရိုက် အလိုအလျောက် ချုံ့တင်မည်)</label>
               <input type="file" id="adImageFile" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">🎵 Audio သီချင်း/အသံဖိုင် တင်ရန် (MP3 / WAV)</label>
-              <input type="file" id="adAudioFile" accept="audio/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100">
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">🎬 Video ဖိုင် တင်ရန် (MP4) သို့မဟုတ် Link</label>
-              <input type="file" id="adVideoFile" accept="video/mp4,video/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 mb-1.5">
-              <input type="url" id="adVideoLink" placeholder="သို့မဟုတ် YouTube/TikTok Link ထည့်ပါ (https://...)" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+              <label class="block text-xs font-semibold text-slate-600 mb-1">🎬 Video / Audio Link ထည့်ပါ (YouTube / TikTok / Direct Link)</label>
+              <input type="url" id="adVideoLink" placeholder="https://..." class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
             </div>
           </div>
 
@@ -222,11 +216,10 @@
     <button type="button" data-tab="admin" class="nav-btn flex flex-col items-center flex-1"><span>⚙️</span>Admin</button>
   </nav>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (Firestore & Auth သီးသန့်) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -243,7 +236,6 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-    const storage = firebase.storage();
 
     let currentUser = null;
     let allAdsCache = [];
@@ -260,10 +252,10 @@
       }, 3000);
     }
 
-    // --- Ultra Fast Image Compression Engine ---
-    function compressImage(file, maxWidth = 800, quality = 0.6) {
-      return new Promise((resolve) => {
-        if (!file || !file.type.startsWith('image/')) return resolve(file);
+    // --- Image To Base64 Converter Engine (Size သေးအောင် အထူးချုံ့ပေးမည်) ---
+    function imageToBase64Compressed(file, maxWidth = 500, quality = 0.5) {
+      return new Promise((resolve, reject) => {
+        if (!file || !file.type.startsWith('image/')) return resolve(null);
         
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -285,43 +277,12 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            canvas.toBlob((blob) => {
-              if (blob) {
-                const compressedFile = new File([blob], file.name, { type: 'image/jpeg' });
-                resolve(compressedFile);
-              } else {
-                resolve(file);
-              }
-            }, 'image/jpeg', quality);
+            const base64String = canvas.toDataURL('image/jpeg', quality);
+            resolve(base64String);
           };
-          img.onerror = () => resolve(file);
+          img.onerror = (err) => reject(err);
         };
-        reader.onerror = () => resolve(file);
-      });
-    }
-
-    // --- High Speed Resumable Upload Task Engine ---
-    function uploadFileWithProgress(storagePath, file, statusElement, labelText) {
-      return new Promise((resolve, reject) => {
-        const ref = storage.ref(storagePath);
-        const task = ref.put(file);
-
-        statusElement.classList.remove('hidden');
-
-        task.on('state_changed', 
-          (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            statusElement.className = "text-center text-xs block bg-blue-50 text-blue-700 p-2 rounded font-semibold border border-blue-200";
-            statusElement.innerText = `⏳ ${labelText}: ${Math.round(progress)}% တင်ပြီးပါပြီ...`;
-          }, 
-          (error) => {
-            reject(error);
-          }, 
-          async () => {
-            const downloadURL = await task.snapshot.ref.getDownloadURL();
-            resolve(downloadURL);
-          }
-        );
+        reader.onerror = (err) => reject(err);
       });
     }
 
@@ -383,7 +344,7 @@
         showToast("အကောင့်သစ် ဖွင့်လှစ်ခြင်း အောင်မြင်သည်");
         setTimeout(() => authModal.classList.add('hidden'), 1000);
       } catch (err) {
-        showAuthStatus("အကောင့်ဖွင့်ခြင်း အမှား: " + err.message, true);
+       showAuthStatus("အကောင့်ဖွင့်ခြင်း အမှား: " + err.message, true);
       }
     });
 
@@ -392,7 +353,7 @@
       showToast("အကောင့်မှ ထွက်လိုက်ပါပြီ");
     });
 
-    // Profile Photo Change
+    // Profile Photo Change (Firestore Base64 Engine)
     const changeProfileBtn = document.getElementById('changeProfileBtn');
     const profileFileInput = document.getElementById('profileFileInput');
 
@@ -402,16 +363,13 @@
       const file = e.target.files[0];
       if (!file || !currentUser) return;
 
-      showToast("Profile ဓာတ်ပုံ အမြန်ချုံ့၍ တင်နေပါသည်...");
+      showToast("Profile ဓာတ်ပုံ ချုံ့၍ တင်နေပါသည်...");
 
       try {
-        const compressedFile = await compressImage(file, 300, 0.7);
-        const storageRef = storage.ref(`profiles/${currentUser.uid}_${Date.now()}.jpg`);
-        const snapshot = await storageRef.put(compressedFile);
-        const photoURL = await snapshot.ref.getDownloadURL();
-
-        await currentUser.updateProfile({ photoURL: photoURL });
-        userImg.src = photoURL;
+        const base64Photo = await imageToBase64Compressed(file, 200, 0.6);
+        
+        await currentUser.updateProfile({ photoURL: base64Photo });
+        userImg.src = base64Photo;
         showToast("Profile ဓာတ်ပုံ ပြောင်းလဲပြီးပါပြီ!");
         renderAdsData(allAdsCache);
       } catch (err) {
@@ -495,7 +453,7 @@
       return match ? match[1] : null;
     }
 
-    // High Speed Post Upload Engine
+    // High Speed Post Upload Engine (Firestore Dedicated)
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!currentUser) return showToast("Login အရင်ဝင်ပါ!");
@@ -505,37 +463,20 @@
       const cat = document.getElementById('adCat').value;
       const subCat = document.getElementById('adSubCat').value;
       const videoLink = document.getElementById('adVideoLink').value.trim();
-      
       const imageFile = document.getElementById('adImageFile').files[0];
-      const audioFile = document.getElementById('adAudioFile').files[0];
-      const videoFile = document.getElementById('adVideoFile').files[0];
       
       const status = document.getElementById('uploadStatus');
       uploadBtn.disabled = true;
 
       try {
         let imageUrl = "";
-        let audioUrl = "";
-        let directVideoUrl = "";
 
-        // 1. Fast Image Compressor & Upload
         if (imageFile) {
           status.classList.remove('hidden');
           status.className = "text-center text-xs block bg-blue-50 text-blue-700 p-2 rounded font-semibold border border-blue-200";
-          status.innerText = "🖼️ ဓာတ်ပုံဆိုက် အလိုအလျောက် ချုံ့ပေးနေပါသည်...";
+          status.innerText = "🖼️ ဓာတ်ပုံကို Firestore သို့ တင်ရန် အလိုအလျောက် ချုံ့ပေးနေပါသည်...";
           
-          const compressedFile = await compressImage(imageFile, 800, 0.6);
-          imageUrl = await uploadFileWithProgress(`posts/images/${Date.now()}_img.jpg`, compressedFile, status, "🖼️ ဓာတ်ပုံ တင်နေပါသည်");
-        }
-
-        // 2. Audio Upload
-        if (audioFile) {
-          audioUrl = await uploadFileWithProgress(`posts/audios/${Date.now()}_${audioFile.name}`, audioFile, status, "🎵 အသံဖိုင် တင်နေပါသည်");
-        }
-
-        // 3. Direct Video Upload
-        if (videoFile) {
-          directVideoUrl = await uploadFileWithProgress(`posts/videos/${Date.now()}_${videoFile.name}`, videoFile, status, "🎬 ဗီဒီယို တင်နေပါသည်");
+          imageUrl = await imageToBase64Compressed(imageFile, 600, 0.5);
         }
 
         const postData = {
@@ -553,8 +494,6 @@
         };
 
         if (imageUrl) postData.imageUrl = imageUrl;
-        if (audioUrl) postData.audioUrl = audioUrl;
-        if (directVideoUrl) postData.directVideoUrl = directVideoUrl;
         if (videoLink) postData.videoUrl = videoLink;
 
         await db.collection("ads").add(postData);
@@ -653,35 +592,15 @@
         const isLiked = currentUser && likes.includes(currentUser.uid);
 
         let imageTag = "";
-        let audioTag = "";
         let videoTag = "";
 
-        // Render Image
+        // Render Image (Base64 or URL)
         if (data.imageUrl) {
           imageTag = `<img src="${data.imageUrl}" class="mt-2 rounded-lg w-full max-h-80 object-cover border" loading="lazy">`;
         }
 
-        // Render Audio Player
-        if (data.audioUrl) {
-          audioTag = `
-            <div class="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-              <p class="text-[10px] font-semibold text-amber-800 mb-1">🎵 သီချင်း / အသံဖိုင်</p>
-              <audio controls class="w-full h-8">
-                <source src="${data.audioUrl}" type="audio/mpeg">
-                သင့် Browser က Audio ကို မပံ့ပိုးပါ။
-              </audio>
-            </div>`;
-        }
-
-        // Render Video (Direct File or Links)
-        if (data.directVideoUrl) {
-          videoTag = `
-            <div class="mt-2 rounded-lg overflow-hidden border bg-black">
-              <video controls class="w-full max-h-80" preload="metadata">
-                <source src="${data.directVideoUrl}" type="video/mp4">
-              </video>
-            </div>`;
-        } else if (data.videoUrl) {
+        // Render Video Links
+        if (data.videoUrl) {
           const ytId = getYoutubeId(data.videoUrl);
           const ttId = getTikTokId(data.videoUrl);
 
@@ -730,7 +649,6 @@
             ${data.description ? `<p class="text-slate-600 text-xs leading-relaxed">${data.description}</p>` : ''}
             
             ${imageTag}
-            ${audioTag}
             ${videoTag}
 
             <div class="flex items-center justify-between border-t border-b py-1.5 text-xs text-slate-600 font-medium mt-2">
@@ -763,7 +681,7 @@
       if (window.tiktokEmbed) window.tiktokEmbed.load();
     }
 
-    // Chat
+    // Chat System
     document.getElementById('chatForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const input = document.getElementById('chatInput');
