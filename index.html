@@ -119,7 +119,7 @@
     <!-- Tab 1: Feed -->
     <div id="tab-feed" class="tab-content space-y-4">
       <div id="feedAds" class="space-y-4">
-        <p class="text-center text-slate-400 py-8 text-sm">Data များကို ယူနေပါသည်...</p>
+        <p class="text-center text-slate-400 py-8 text-sm">Data များကို ခဏအတွင်း ယူနေပါသည်...</p>
       </div>
     </div>
 
@@ -201,7 +201,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">🎵 ဖုန်းထဲမှ MP3 / Audio သီချင်း ရွေးရန် (TikTok Music)</label>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">🎵 ဖုန်းထဲမှ MP3 / Audio သီချင်း ရွေးရန် (Max 300KB)</label>
               <input type="file" id="adAudioFile" accept="audio/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
             </div>
 
@@ -251,13 +251,15 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // Enable Offline Persistence for High Speed Loading
+    db.enablePersistence().catch(err => console.log("Persistence error:", err));
+
     let currentUser = null;
-    let currentUserCustomPhoto = ""; // Firestore မှ User Profile
+    let currentUserCustomPhoto = ""; 
     let allAdsCache = [];
     let currentSearchQuery = "";
     let activeTag = "all";
 
-    // --- Toast Notification ---
     function showToast(msg) {
       const toast = document.getElementById('toast');
       document.getElementById('toastMsg').innerText = msg;
@@ -267,8 +269,8 @@
       }, 3000);
     }
 
-    // --- Image To Base64 Converter Engine ---
-    function imageToBase64Compressed(file, maxWidth = 500, quality = 0.5) {
+    // High Performance Image Compressor (400px Max, Low Quality for Ultra Fast Speed)
+    function imageToBase64Compressed(file, maxWidth = 400, quality = 0.35) {
       return new Promise((resolve, reject) => {
         if (!file || !file.type.startsWith('image/')) return resolve(null);
         
@@ -301,13 +303,12 @@
       });
     }
 
-    // --- Audio File To Base64 Converter ---
     function audioToBase64(file) {
       return new Promise((resolve, reject) => {
         if (!file || !file.type.startsWith('audio/')) return resolve(null);
         
-        if (file.size > 700000) {
-          return reject(new Error("Audio ဖိုင်ဆိုဒ် အလွန်ကြီးနေပါသည်။ (700KB အောက် ဖိုင်ငယ်များကိုသာ တင်ပေးပါ)"));
+        if (file.size > 350000) {
+          return reject(new Error("Audio ဖိုင်အမျိုးအစား လိုင်းဆွဲအား သက်သာစေရန် 300KB အောက်သာ လက်ခံပါသည်။"));
         }
 
         const reader = new FileReader();
@@ -317,7 +318,6 @@
       });
     }
 
-    // --- Modal Auth Controls ---
     const authModal = document.getElementById('authModal');
     const openAuthModalBtn = document.getElementById('openAuthModalBtn');
     const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
@@ -344,7 +344,7 @@
       try {
         await auth.signInWithPopup(provider);
         authModal.classList.add('hidden');
-        showToast("Google Account ဖြင့် အောင်မြင်စွာ Login ဝင်လိုက်ပါပြီ");
+        showToast("Google Account ဖြင့် ဝင်ရောက်ပါပြီ");
       } catch (err) {
         showAuthStatus("Google Login အမှား: " + err.message, true);
       }
@@ -384,7 +384,6 @@
       showToast("အကောင့်မှ ထွက်လိုက်ပါပြီ");
     });
 
-    // Profile Photo Change System (Firestore Base64 Engine)
     const changeProfileBtn = document.getElementById('changeProfileBtn');
     const profileFileInput = document.getElementById('profileFileInput');
 
@@ -394,184 +393,9 @@
       const file = e.target.files[0];
       if (!file || !currentUser) return;
 
-      showToast("Profile ဓာတ်ပုံ ပြင်ဆင်နေပါသည်...");
+      showToast("Profile ပြင်ဆင်နေပါသည်...");
 
-        try {
-        // Firebase URL Limit ကိုကျော်လွှားရန် Firestore "users" ထဲသိမ်းမည်
-        const base64Photo = await imageToBase64Compressed(file, 150, 0.4);
-        
-        await db.collection("users").doc(currentUser.uid).set({
-          photoURL: base64Photo,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-
-        currentUserCustomPhoto = base64Photo;
-        userImg.src = base64Photo;
-        showToast("Profile ဓာတ်ပုံ အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ!");
-        renderAdsData(allAdsCache);
-      } catch (err) {
-        showToast("ဓာတ်ပုံ တင်ရာတွင် အမှားရှိပါသည်: " + err.message);
-      }
-    });
-
-    // Auth Change Listener
-    auth.onAuthStateChanged(async (user) => {
-      currentUser = user;
-      if (user) {
-        openAuthModalBtn.classList.add('hidden');
-        userInfo.classList.remove('hidden');
-        
-        // Firestore မှ Custom Profile Picture ကို ရယူမည်
-        try {
-          const userDoc = await db.collection("users").doc(user.uid).get();
-          if (userDoc.exists && userDoc.data().photoURL) {
-            currentUserCustomPhoto = userDoc.data().photoURL;
-          } else {
-            currentUserCustomPhoto = user.photoURL || 'https://via.placeholder.com/40';
-          }
-        } catch(e) {
-          currentUserCustomPhoto = user.photoURL || 'https://via.placeholder.com/40';
-        }
-
-        userImg.src = currentUserCustomPhoto;
-        userImg.title = user.displayName || user.email;
-        loginWarning.classList.add('hidden');
-        uploadBtn.disabled = false;
-        uploadBtn.className = "w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg text-sm hover:bg-blue-700 transition cursor-pointer";
-        uploadBtn.innerText = "တင်မည်";
-      } else {
-        openAuthModalBtn.classList.remove('hidden');
-        userInfo.classList.add('hidden');
-        loginWarning.classList.remove('hidden');
-        uploadBtn.disabled = true;
-        uploadBtn.className = "w-full bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm cursor-not-allowed";
-        uploadBtn.innerText = "တင်မည် (Login ဝင်ပါ)";
-        currentUserCustomPhoto = "";
-      }
-      renderAdsData(allAdsCache);
-    });
-
-    // Navigation
-    const navButtons = document.querySelectorAll('.nav-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    navButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const targetTab = btn.getAttribute('data-tab');
-        tabContents.forEach(c => c.classList.add('hidden'));
-        document.getElementById(`tab-${targetTab}`).classList.remove('hidden');
-        navButtons.forEach(b => { b.classList.remove('text-blue-600'); b.classList.add('text-slate-500'); });
-        btn.classList.remove('text-slate-500'); btn.classList.add('text-blue-600');
-        window.scrollTo(0, 0);
-      });
-    });
-
-    // Tag Filter
-    const tagButtons = document.querySelectorAll('.tag-btn');
-    tagButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        activeTag = btn.getAttribute('data-tag');
-        tagButtons.forEach(b => {
-          b.classList.remove('bg-blue-600', 'text-white');
-          b.classList.add('bg-slate-100', 'text-slate-600');
-        });
-        btn.classList.remove('bg-slate-100', 'text-slate-600');
-        btn.classList.add('bg-blue-600', 'text-white');
-        renderAdsData(allAdsCache);
-      });
-    });
-
-    // Search
-    const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('input', (e) => {
-      currentSearchQuery = e.target.value.toLowerCase().trim();
-      renderAdsData(allAdsCache);
-    });
-    document.getElementById('clearSearchBtn').addEventListener('click', () => {
-      searchInput.value = "";
-      currentSearchQuery = "";
-      renderAdsData(allAdsCache);
-    });
-
-    function getYoutubeId(url) {
-      if (!url) return null;
-      const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-      return (match && match[2].length === 11) ? match[2] : null;
-    }
-
-    function getTikTokId(url) {
-      if (!url) return null;
-      const match = url.match(/video\/(\d+)/);
-      return match ? match[1] : null;
-    }
-
-    // High Speed Post Upload Engine
-    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!currentUser) return showToast("Login အရင်ဝင်ပါ!");
-
-      const title = document.getElementById('adTitle').value.trim();
-      const desc = document.getElementById('adDesc').value.trim();
-      const cat = document.getElementById('adCat').value;
-      const subCat = document.getElementById('adSubCat').value;
-      const videoLink = document.getElementById('adVideoLink').value.trim();
-      const imageFile = document.getElementById('adImageFile').files[0];
-      const audioFile = document.getElementById('adAudioFile').files[0];
-      
-      const status = document.getElementById('uploadStatus');
-      uploadBtn.disabled = true;
-
-      try {
-        let imageUrl = "";
-        let audioBase64 = "";
-
-        if (imageFile) {
-          status.classList.remove('hidden');
-          status.className = "text-center text-xs block bg-blue-50 text-blue-700 p-2 rounded font-semibold border border-blue-200";
-          status.innerText = "🖼️ ဓာတ်ပုံကို အလိုအလျောက် ချုံ့ပေးနေပါသည်...";
-          
-          imageUrl = await imageToBase64Compressed(imageFile, 600, 0.5);
-        }
-
-        if (audioFile) {
-          status.classList.remove('hidden');
-          status.className = "text-center text-xs block bg-purple-50 text-purple-700 p-2 rounded font-semibold border border-purple-200";
-          status.innerText = "🎵 Audio သီချင်းဖိုင် ပြင်ဆင်နေပါသည်...";
-          
-          audioBase64 = await audioToBase64(audioFile);
-        }
-
-        const postData = {
-          title: title,
-          description: desc,
-          category: cat,
-          subCategory: subCat,
-          authorUid: currentUser.uid,
-          authorName: currentUser.displayName || currentUser.email.split('@')[0],
-          authorEmail: currentUser.email,
-          authorPhoto: currentUserCustomPhoto || "",
-          likes: [],
-          comments: [],
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        if (imageUrl) postData.imageUrl = imageUrl;
-        if (audioBase64) postData.audioUrl = audioBase64;
-        if (videoLink) postData.videoUrl = videoLink;
-
-        await db.collection("ads").add(postData);
-
-        status.className = "text-center text-xs block bg-emerald-50 text-emerald-700 p-2.5 rounded font-semibold border border-emerald-200";
-        status.innerText = "🎉 TikTok Style ပို့စ် တင်ပြီးပါပြီ!";
-        showToast("ပို့စ်အသစ် တင်ပြီးပါပြီ!");
-        document.getElementById('uploadForm').reset();
-      } catch (err) {
-        status.className = "text-center text-xs block bg-rose-50 text-rose-600 p-2 rounded font-semibold border border-rose-200";
-        status.innerText = "❌ တင်ရာတွင် အမှားရှိပါသည်: " + err.message;
-      } finally {
-        uploadBtn.disabled = false;
-      }
-    });
+       });
 
     async function deletePost(id, authorUid) {
       if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
@@ -586,7 +410,6 @@
         }
       }
     }
-
     async function toggleLike(postId, likesArray) {
       if (!currentUser) return showToast("Like ပေးရန် အကောင့်ဝင်ပါ!");
       const postRef = db.collection("ads").doc(postId);
@@ -628,7 +451,8 @@
       }
     }
 
-    db.collection("ads").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+    // High Speed Fetch Optimization (Limit 20 posts to reduce bandwidth consumption)
+    db.collection("ads").orderBy("createdAt", "desc").limit(20).onSnapshot((snapshot) => {
       allAdsCache = [];
       snapshot.forEach(doc => {
         allAdsCache.push({ id: doc.id, ...doc.data() });
@@ -656,15 +480,14 @@
 
         let mediaTag = "";
 
-        // 1. Image + TikTok Music Style Player
         if (data.imageUrl) {
           mediaTag += `
-            <div class="relative rounded-xl overflow-hidden mt-2 border bg-black group">
-              <img src="${data.imageUrl}" class="w-full max-h-96 object-cover" loading="lazy">
+            <div class="relative rounded-xl overflow-hidden mt-2 border bg-slate-900 group">
+              <img src="${data.imageUrl}" class="w-full max-h-80 object-cover" loading="lazy">
               ${data.audioUrl ? `
                 <div class="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-md rounded-lg p-2 flex items-center gap-2 border border-white/20">
-                  <div class="w-7 h-7 rounded-full bg-slate-800 border border-white flex items-center justify-center animate-spin-disc text-xs">🎵</div>
-                  <audio controls class="h-7 flex-1 scale-90 -ml-2">
+                  <div class="w-6 h-6 rounded-full bg-slate-800 border border-white flex items-center justify-center animate-spin-disc text-[10px]">🎵</div>
+                  <audio controls class="h-6 flex-1 scale-90 -ml-2" preload="none">
                     <source src="${data.audioUrl}" type="audio/mpeg">
                   </audio>
                 </div>
@@ -672,17 +495,16 @@
             </div>
           `;
         } else if (data.audioUrl) {
-          // Pure Audio post
           mediaTag += `
-            <div class="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-xl flex items-center gap-2">
-              <span class="text-lg">🎧</span>
-              <audio controls class="w-full h-8">
+            <div class="mt-2 p-2 bg-purple-50 border border-purple-200 rounded-xl flex items-center gap-2">
+              <span class="text-base">🎧</span>
+              <audio controls class="w-full h-7" preload="none">
                 <source src="${data.audioUrl}" type="audio/mpeg">
               </audio>
             </div>
           `;
-    }
-    // 2. Video Link (YouTube / TikTok / Direct MP4)
+        }
+
         if (data.videoUrl) {
           const ytId = getYoutubeId(data.videoUrl);
           const ttId = getTikTokId(data.videoUrl);
@@ -690,7 +512,7 @@
           if (ytId) {
             mediaTag += `
               <div class="mt-2 rounded-xl overflow-hidden border bg-black aspect-video">
-                <iframe class="w-full h-full" src="https://www.youtube.com/embed/${ytId}" frameborder="0" allowfullscreen></iframe>
+                <iframe class="w-full h-full" src="https://www.youtube.com/embed/${ytId}" frameborder="0" allowfullscreen loading="lazy"></iframe>
               </div>`;
           } else if (ttId) {
             mediaTag += `
@@ -698,10 +520,9 @@
                 <section></section>
               </blockquote>`;
           } else if (data.videoUrl.endsWith('.mp4') || data.videoUrl.includes('.mp4')) {
-            // Direct MP4 Video Player
             mediaTag += `
               <div class="mt-2 rounded-xl overflow-hidden border bg-black">
-                <video controls class="w-full max-h-96 object-cover">
+                <video controls preload="metadata" class="w-full max-h-80 object-cover">
                   <source src="${data.videoUrl}" type="video/mp4">
                 </video>
               </div>`;
@@ -713,12 +534,12 @@
           }
         }
 
-        const authorPhoto = data.authorPhoto ? `<img src="${data.authorPhoto}" class="w-6 h-6 rounded-full object-cover">` : '<div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px]">👤</div>';
+        const authorPhoto = data.authorPhoto ? `<img src="${data.authorPhoto}" class="w-6 h-6 rounded-full object-cover" loading="lazy">` : '<div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px]">👤</div>';
         const canDelete = currentUser && (currentUser.uid === data.authorUid);
 
-        let commentsList = comments.slice(-3).map(c => `
+        let commentsList = comments.slice(-2).map(c => `
           <div class="text-[11px] bg-slate-100 p-1.5 rounded flex items-start gap-1.5">
-            <img src="${c.userPhoto || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full mt-0.5 object-cover">
+            <img src="${c.userPhoto || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full mt-0.5 object-cover" loading="lazy">
             <div><span class="font-bold text-slate-700">${c.userName}:</span> ${c.text}</div>
           </div>
         `).join('');
@@ -771,7 +592,7 @@
       if (window.tiktokEmbed) window.tiktokEmbed.load();
     }
 
-    // Chat System
+    // Chat System with Limit (Last 30 messages to optimize performance)
     document.getElementById('chatForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const input = document.getElementById('chatInput');
@@ -796,12 +617,16 @@
       }
     });
 
-    db.collection("chats").orderBy("createdAt", "asc").onSnapshot((snapshot) => {
-      let html = "";
+    db.collection("chats").orderBy("createdAt", "desc").limit(25).onSnapshot((snapshot) => {
+      let messages = [];
       snapshot.forEach(doc => {
-        const c = doc.data();
+        messages.unshift(doc.data());
+      });
+
+      let html = "";
+      messages.forEach(c => {
         const isMe = currentUser && (currentUser.uid === c.senderUid);
-        const photo = c.senderPhoto ? `<img src="${c.senderPhoto}" class="w-5 h-5 rounded-full inline object-cover">` : '';
+        const photo = c.senderPhoto ? `<img src="${c.senderPhoto}" class="w-5 h-5 rounded-full inline object-cover" loading="lazy">` : '';
         
         let timeStr = "";
         if (c.createdAt && c.createdAt.toDate) {
