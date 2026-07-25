@@ -200,7 +200,6 @@
               <input type="file" id="adImageFile" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
             </div>
 
-            <!-- New Audio Upload Option (TikTok background music style) -->
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">🎵 ဖုန်းထဲမှ MP3 / Audio သီချင်း ရွေးရန် (TikTok Music)</label>
               <input type="file" id="adAudioFile" accept="audio/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
@@ -253,6 +252,7 @@
     const db = firebase.firestore();
 
     let currentUser = null;
+    let currentUserCustomPhoto = ""; // Firestore မှ User Profile
     let allAdsCache = [];
     let currentSearchQuery = "";
     let activeTag = "all";
@@ -306,8 +306,7 @@
       return new Promise((resolve, reject) => {
         if (!file || !file.type.startsWith('audio/')) return resolve(null);
         
-        // Safety check for Firestore Limit
-        if (file.size > 700000) { // Limit to ~700KB max for audio in Firestore
+        if (file.size > 700000) {
           return reject(new Error("Audio ဖိုင်ဆိုဒ် အလွန်ကြီးနေပါသည်။ (700KB အောက် ဖိုင်ငယ်များကိုသာ တင်ပေးပါ)"));
         }
 
@@ -385,7 +384,7 @@
       showToast("အကောင့်မှ ထွက်လိုက်ပါပြီ");
     });
 
-    // Profile Photo Change
+    // Profile Photo Change System (Firestore Base64 Engine)
     const changeProfileBtn = document.getElementById('changeProfileBtn');
     const profileFileInput = document.getElementById('profileFileInput');
 
@@ -395,26 +394,46 @@
       const file = e.target.files[0];
       if (!file || !currentUser) return;
 
-      showToast("Profile ဓာတ်ပုံ ချုံ့၍ တင်နေပါသည်...");
+      showToast("Profile ဓာတ်ပုံ ပြင်ဆင်နေပါသည်...");
 
-      try {
-        const base64Photo = await imageToBase64Compressed(file, 200, 0.6);
+        try {
+        // Firebase URL Limit ကိုကျော်လွှားရန် Firestore "users" ထဲသိမ်းမည်
+        const base64Photo = await imageToBase64Compressed(file, 150, 0.4);
         
-        await currentUser.updateProfile({ photoURL: base64Photo });
+        await db.collection("users").doc(currentUser.uid).set({
+          photoURL: base64Photo,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        currentUserCustomPhoto = base64Photo;
         userImg.src = base64Photo;
-        showToast("Profile ဓာတ်ပုံ ပြောင်းလဲပြီးပါပြီ!");
+        showToast("Profile ဓာတ်ပုံ အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ!");
         renderAdsData(allAdsCache);
       } catch (err) {
         showToast("ဓာတ်ပုံ တင်ရာတွင် အမှားရှိပါသည်: " + err.message);
       }
     });
 
-    auth.onAuthStateChanged((user) => {
+    // Auth Change Listener
+    auth.onAuthStateChanged(async (user) => {
       currentUser = user;
       if (user) {
         openAuthModalBtn.classList.add('hidden');
         userInfo.classList.remove('hidden');
-        userImg.src = user.photoURL || 'https://via.placeholder.com/40';
+        
+        // Firestore မှ Custom Profile Picture ကို ရယူမည်
+        try {
+          const userDoc = await db.collection("users").doc(user.uid).get();
+          if (userDoc.exists && userDoc.data().photoURL) {
+            currentUserCustomPhoto = userDoc.data().photoURL;
+          } else {
+            currentUserCustomPhoto = user.photoURL || 'https://via.placeholder.com/40';
+          }
+        } catch(e) {
+          currentUserCustomPhoto = user.photoURL || 'https://via.placeholder.com/40';
+        }
+
+        userImg.src = currentUserCustomPhoto;
         userImg.title = user.displayName || user.email;
         loginWarning.classList.add('hidden');
         uploadBtn.disabled = false;
@@ -427,6 +446,7 @@
         uploadBtn.disabled = true;
         uploadBtn.className = "w-full bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm cursor-not-allowed";
         uploadBtn.innerText = "တင်မည် (Login ဝင်ပါ)";
+        currentUserCustomPhoto = "";
       }
       renderAdsData(allAdsCache);
     });
@@ -485,7 +505,7 @@
       return match ? match[1] : null;
     }
 
-    // High Speed Post Upload Engine (Image + MP3 Audio Support)
+    // High Speed Post Upload Engine
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!currentUser) return showToast("Login အရင်ဝင်ပါ!");
@@ -529,7 +549,7 @@
           authorUid: currentUser.uid,
           authorName: currentUser.displayName || currentUser.email.split('@')[0],
           authorEmail: currentUser.email,
-          authorPhoto: currentUser.photoURL || "",
+          authorPhoto: currentUserCustomPhoto || "",
           likes: [],
           comments: [],
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -588,7 +608,7 @@
 
       const commentObj = {
         userName: currentUser.displayName || currentUser.email.split('@')[0],
-        userPhoto: currentUser.photoURL || "",
+        userPhoto: currentUserCustomPhoto || "",
         text: text,
         createdAt: new Date().toISOString()
       };
@@ -661,9 +681,8 @@
               </audio>
             </div>
           `;
-        }
-
-        // 2. Video Link (YouTube / TikTok / Direct MP4)
+    }
+    // 2. Video Link (YouTube / TikTok / Direct MP4)
         if (data.videoUrl) {
           const ytId = getYoutubeId(data.videoUrl);
           const ttId = getTikTokId(data.videoUrl);
@@ -760,7 +779,7 @@
       if (!text) return;
 
       const senderName = currentUser ? (currentUser.displayName || currentUser.email.split('@')[0]) : "ဧည့်သည်";
-      const senderPhoto = currentUser ? (currentUser.photoURL || "") : "";
+      const senderPhoto = currentUser ? currentUserCustomPhoto : "";
       const senderUid = currentUser ? currentUser.uid : "guest";
 
       try {
