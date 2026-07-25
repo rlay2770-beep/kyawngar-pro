@@ -3,64 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
   <title>KyawNgar Pro</title>
+  
+  <meta name="theme-color" content="#2563eb">
+  <meta name="description" content="KyawNgar Pro - News, Reels, Ads and Community Chat">
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script async src="https://www.tiktok.com/embed.js"></script>
+
   <style>
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .animate-spin-disc { animation: spin-slow 5s linear infinite; }
+    
+    /* TikTok Floating Music Disc Animation */
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-disc {
+      animation: spin-slow 5s linear infinite;
+    }
   </style>
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col font-sans pb-20 select-none">
 
-  <!-- Toast Notification -->
+  <!-- Toast Notification Box -->
   <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white text-xs px-4 py-2.5 rounded-full shadow-lg transition-all duration-300 opacity-0 pointer-events-none flex items-center gap-2">
     <span id="toastMsg"></span>
-  </div>
-
-  <!-- Global Announcement Popup (System Broadcast) -->
-  <div id="announcementModal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-3 border-2 border-blue-500 relative">
-      <h3 class="text-base font-bold text-blue-600 flex items-center gap-2">📢 စနစ်သတိပေးချက်</h3>
-      <p id="announcementText" class="text-xs text-slate-700 leading-relaxed"></p>
-      <button id="closeAnnouncementBtn" class="w-full bg-blue-600 text-white font-bold py-2 rounded-xl text-xs hover:bg-blue-700">လက်ခံရရှိပါသည်</button>
-    </div>
   </div>
 
   <!-- Header -->
   <header class="bg-blue-600 text-white p-3.5 shadow-md flex justify-between items-center sticky top-0 z-50">
     <h1 class="text-lg font-bold flex items-center gap-1.5">🚀 KyawNgar Pro</h1>
     
+    <!-- Auth Container -->
     <div id="authContainer" class="flex items-center gap-1.5">
-      <button id="openAuthModalBtn" class="bg-white text-blue-600 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-slate-100 transition">
-        🔐 Login / Register
+      <button id="openAuthModalBtn" class="bg-white text-blue-600 text-xs font-bold px-3 py-1.5 rounded-lg shadow flex items-center gap-1.5 hover:bg-slate-100 transition">
+        <span>🔐 Login / Register</span>
       </button>
 
       <div id="userInfo" class="hidden flex items-center gap-2">
-        <div class="relative group cursor-pointer" id="changeProfileBtn" title="Profile ဓာတ်ပုံပြောင်းရန်">
-          <img id="userImg" class="w-8 h-8 rounded-full border-2 border-white shadow object-cover" src="https://via.placeholder.com/40">
+        <div class="relative group cursor-pointer" id="changeProfileBtn" title="Profile ဓာတ်ပုံပြောင်းရန် နှိပ်ပါ">
+          <img id="userImg" class="w-8 h-8 rounded-full border-2 border-white shadow object-cover">
+          <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[9px] text-white">📷</div>
         </div>
-        <div class="flex flex-col">
-          <span id="headerUsername" class="text-xs font-bold leading-tight"></span>
-          <span id="adminBadge" class="text-[9px] bg-amber-400 text-slate-900 px-1 rounded font-bold hidden w-max">ADMIN</span>
-        </div>
-        <button id="logoutBtn" class="bg-rose-500 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-rose-600 transition ml-1">ထွက်မည်</button>
+        <button id="logoutBtn" class="bg-rose-500 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-rose-600 transition">ထွက်မည်</button>
       </div>
     </div>
   </header>
 
+  <!-- Hidden Profile Photo Input -->
   <input type="file" id="profileFileInput" accept="image/*" class="hidden">
 
-  <!-- Auth Modal -->
+  <!-- Login Modal Popup -->
   <div id="authModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-4 relative">
       <button id="closeAuthModalBtn" class="absolute top-3 right-3 text-slate-400 text-lg font-bold">✕</button>
+      
       <h3 class="text-base font-bold text-slate-800 text-center">🔐 အကောင့်ဝင်ရန် / အကောင့်သစ်ဖွင့်ရန်</h3>
       
-      <button id="googleLoginBtn" class="w-full border border-slate-300 bg-white text-slate-700 font-semibold py-2 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-slate-50 transition">
+      <button id="googleLoginBtn" class="w-full border border-slate-300 bg-white text-slate-700 font-semibold py-2 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-slate-50 transition shadow-sm">
         <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
         <span>Google Account ဖြင့် ဝင်မည်</span>
       </button>
@@ -72,10 +79,6 @@
       </div>
 
       <form id="emailAuthForm" class="space-y-2.5">
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-600 mb-1">Username (သုံးစွဲသူအမည်)</label>
-          <input type="text" id="usernameInput" placeholder="ဥပမာ - mgmg123" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
         <div>
           <label class="block text-[11px] font-semibold text-slate-600 mb-1">အီးမေးလ် (Email)</label>
           <input type="email" id="emailInput" required placeholder="example@gmail.com" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
@@ -90,53 +93,12 @@
           <button type="button" id="emailSignUpBtn" class="bg-slate-700 text-white font-bold py-2 rounded-lg text-xs hover:bg-slate-800">အကောင့်သစ်ဖွင့်မည်</button>
         </div>
       </form>
+
+      <div id="authStatus" class="text-center text-[11px] hidden p-2 rounded"></div>
     </div>
   </div>
 
-  <!-- Direct Chat (1-on-1) Modal Popup -->
-  <div id="directChatModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-4 flex flex-col h-[500px] relative">
-      <div class="flex justify-between items-center border-b pb-2 mb-2">
-        <h3 id="dmTargetName" class="text-xs font-bold text-slate-800 flex items-center gap-1.5"></h3>
-        <button id="closeDirectChatBtn" class="text-slate-400 font-bold text-sm">✕</button>
-      </div>
-
-      <div id="dmChatBox" class="flex-1 overflow-y-auto space-y-2.5 p-2 bg-slate-50 rounded text-xs mb-2">
-        <p class="text-center text-slate-400">စကားပြောဆိုမှု မရှိသေးပါ...</p>
-      </div>
-
-      <form id="dmForm" class="space-y-2">
-        <div class="flex gap-2">
-          <input type="text" id="dmInput" placeholder="စာရိုက်ပါ..." class="flex-1 border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
-          <button type="submit" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold">ပို့မည်</button>
-        </div>
-        <div class="flex gap-2 items-center text-[11px]">
-          <input type="file" id="dmImageFile" accept="image/*" class="text-[10px] text-slate-500 w-1/2">
-          <input type="url" id="dmVideoUrl" placeholder="Video URL..." class="border p-1 rounded w-1/2 text-[10px]">
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- User Profile Action Modal (For Direct Chat, Warning & Report) -->
-  <div id="profileActionModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl shadow-xl max-w-xs w-full p-4 space-y-3 text-center relative">
-      <button id="closeProfileActionBtn" class="absolute top-3 right-3 text-slate-400 font-bold">✕</button>
-      <img id="actionUserImg" class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-blue-500 shadow" src="https://via.placeholder.com/60">
-      <h3 id="actionUserName" class="font-bold text-slate-800 text-sm"></h3>
-      
-      <div class="space-y-2 pt-2 border-t">
-        <button id="startDmBtn" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-blue-700">💬 သီးသန့် စကားပြောမည် (Direct Chat)</button>
-        <button id="reportUserBtn" class="w-full bg-amber-500 text-white font-bold py-2 rounded-lg text-xs hover:bg-amber-600">🛡️ Admin ထံ တိုင်ကြားမည် (Private Report)</button>
-        <div id="adminUserControls" class="hidden space-y-2 pt-2 border-t">
-          <button id="warnUserBtn" class="w-full bg-rose-500 text-white font-bold py-2 rounded-lg text-xs">⚠️ စည်းကမ်းချိုးဖောက်မှု သတိပေးမည်</button>
-          <button id="toggleBlockBtn" class="w-full bg-slate-800 text-white font-bold py-2 rounded-lg text-xs">⛔ အကောင့် ခေတ္တ ပိတ်မည်/ဖွင့်မည်</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Search & Category Bar -->
+  <!-- Search & Category Filter Bar -->
   <div class="bg-white border-b sticky top-[57px] z-40 shadow-sm p-3 space-y-2">
     <div class="max-w-md mx-auto flex gap-2">
       <input type="text" id="searchInput" placeholder="ရှာဖွေရန် စာသား ရိုက်ပါ..." class="flex-1 border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
@@ -151,20 +113,40 @@
     </div>
   </div>
 
-  <!-- Main Area -->
+  <!-- Main Display Container -->
   <main class="flex-1 max-w-md w-full mx-auto p-4 space-y-4">
-    <div id="tab-feed" class="tab-content space-y-4"><div id="feedAds"></div></div>
-    <div id="tab-reels" class="tab-content space-y-4 hidden"><div id="reelsAds"></div></div>
-    <div id="tab-ads" class="tab-content space-y-4 hidden"><div id="paidAds"></div></div>
 
-    <!-- Chat Tab (Community Public Chat) -->
+    <!-- Tab 1: Feed -->
+    <div id="tab-feed" class="tab-content space-y-4">
+      <div id="feedAds" class="space-y-4">
+        <p class="text-center text-slate-400 py-8 text-sm">Data များကို ခဏအတွင်း ယူနေပါသည်...</p>
+      </div>
+    </div>
+
+    <!-- Tab 2: Reels -->
+    <div id="tab-reels" class="tab-content space-y-4 hidden">
+      <div id="reelsAds" class="space-y-4">
+        <p class="text-center text-slate-400 py-8 text-sm">Reels ဗီဒီယိုများ မရှိသေးပါ။</p>
+      </div>
+    </div>
+
+    <!-- Tab 3: Ads -->
+    <div id="tab-ads" class="tab-content space-y-4 hidden">
+      <div id="paidAds" class="space-y-4">
+        <p class="text-center text-slate-400 py-8 text-sm">VIP ကြော်ငြာများ မရှိသေးပါ။</p>
+      </div>
+    </div>
+
+    <!-- Tab 4: Chat -->
     <div id="tab-chat" class="tab-content space-y-4 hidden">
       <div class="bg-white p-4 rounded-xl shadow border flex flex-col h-[480px]">
         <h3 class="text-xs font-bold text-slate-500 mb-2 pb-2 border-b flex justify-between items-center">
-          <span>💬 Public Community Chat</span>
+          <span>💬 Community Chat</span>
           <span class="text-[10px] text-slate-400">Live</span>
         </h3>
-        <div id="chatBox" class="flex-1 overflow-y-auto space-y-3 mb-3 p-2 bg-slate-50 rounded text-sm"></div>
+        <div id="chatBox" class="flex-1 overflow-y-auto space-y-3 mb-3 p-2 bg-slate-50 rounded text-sm">
+          <p class="text-center text-slate-400 text-xs">စကားပြောဆိုမှု မရှိသေးပါ...</p>
+        </div>
         <form id="chatForm" class="flex gap-2">
           <input type="text" id="chatInput" placeholder="စာရိုက်ပါ..." required class="flex-1 border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
           <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">ပို့မည်</button>
@@ -172,29 +154,14 @@
       </div>
     </div>
 
-    <!-- Admin & Post Form Tab -->
+    <!-- Tab 5: Admin Upload -->
     <div id="tab-admin" class="tab-content space-y-4 hidden">
-      <!-- Admin Broadcast Section (Visible to Admin Only) -->
-      <div id="adminPanelSection" class="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3 hidden">
-        <h3 class="font-bold text-xs text-amber-800 flex items-center gap-1.5">⚙️ Admin Control Panel</h3>
-        
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-700 mb-1">📢 Member အားလုံးထံ စာလွှာ/သတိပေးချက် လှမ်းပို့ရန် (Broadcast)</label>
-          <textarea id="broadcastMsgInput" rows="2" placeholder="ဥပမာ - နာရီပိုင်းအတွင်း ဗားရှင်းမြှင့်တင်ခြင်း လုပ်ဆောင်ပါမည်..." class="w-full border p-2 rounded-lg text-xs outline-none bg-white"></textarea>
-          <button id="sendBroadcastBtn" class="mt-1 bg-amber-600 text-white font-bold py-1.5 px-3 rounded-lg text-xs hover:bg-amber-700">အဖွဲ့ဝင်အားလုံးထံ ပို့မည်</button>
-        </div>
-
-        <div class="pt-2 border-t">
-          <h4 class="font-bold text-[11px] text-slate-700 mb-2">🛡️ Admin သီးသန့် တိုင်ကြားစာများ (Private Reports)</h4>
-          <div id="reportsList" class="space-y-2 max-h-40 overflow-y-auto text-xs bg-white p-2 rounded border">
-            <p class="text-slate-400 text-center">တိုင်ကြားစာ မရှိသေးပါ</p>
-          </div>
-        </div>
-      </div>
-
       <div class="bg-white rounded-xl shadow p-4 border space-y-3">
-        <h2 class="text-base font-bold text-slate-800 border-b pb-2">⚙️ ပို့စ်အသစ် တင်ရန်</h2>
-        <div id="loginWarning" class="bg-amber-50 border border-amber-200 text-amber-800 text-xs p-3 rounded-lg text-center">⚠️ ပို့စ်တင်ရန်အတွက် Login အရင်ဝင်ပေးပါ။</div>
+        <h2 class="text-base font-bold text-slate-800 border-b pb-2">⚙️ TikTok Style ပို့စ်အသစ် တင်ရန်</h2>
+        
+        <div id="loginWarning" class="bg-amber-50 border border-amber-200 text-amber-800 text-xs p-3 rounded-lg text-center">
+          ⚠️ ပို့စ်တင်ရန်အတွက် Login အရင်ဝင်ပေးပါ။
+        </div>
 
         <form id="uploadForm" class="space-y-3">
           <div>
@@ -226,28 +193,35 @@
             </div>
           </div>
 
+          <!-- Media Attachments Section -->
           <div class="space-y-2 pt-2 border-t">
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">🖼️ ဓာတ်ပုံ ရွေးချယ်ရန်</label>
-              <input type="file" id="adImageFile" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700">
+              <input type="file" id="adImageFile" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
             </div>
+
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">🎵 MP3 Audio (Max 300KB)</label>
-              <input type="file" id="adAudioFile" accept="audio/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700">
+              <label class="block text-xs font-semibold text-slate-600 mb-1">🎵 ဖုန်းထဲမှ MP3 / Audio သီချင်း ရွေးရန် (Max 300KB)</label>
+              <input type="file" id="adAudioFile" accept="audio/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
             </div>
+
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">🎬 Video / Media Link (TikTok, YouTube, MP4)</label>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">🎬 Video/Audio Link ထည့်ပါ (TikTok / YouTube / Direct MP4)</label>
               <input type="url" id="adVideoLink" placeholder="https://..." class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
             </div>
           </div>
 
           <button type="submit" id="uploadBtn" disabled class="w-full bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed">တင်မည် (Login ဝင်ပါ)</button>
         </form>
+
+        <!-- Progress Box -->
+        <div id="uploadStatus" class="text-center text-xs hidden p-2 rounded"></div>
       </div>
     </div>
+
   </main>
 
-  <!-- Bottom Nav -->
+  <!-- Bottom Navigation Bar -->
   <nav class="bg-white border-t fixed bottom-0 left-0 right-0 flex justify-around py-2 shadow-lg z-50 text-[11px] font-semibold text-slate-500">
     <button type="button" data-tab="feed" class="nav-btn text-blue-600 flex flex-col items-center flex-1"><span>📰</span>သတင်းစင်</button>
     <button type="button" data-tab="reels" class="nav-btn flex flex-col items-center flex-1"><span>🎬</span>Reels</button>
@@ -269,20 +243,19 @@
       projectId: "kyawngar-pro",
       storageBucket: "kyawngar-pro.firebasestorage.app",
       messagingSenderId: "640411826581",
-      appId: "1:640411826581:web:e95bfa58b7b2f93085de9c"
+      appId: "1:640411826581:web:e95bfa58b7b2f93085de9c",
+      measurementId: "G-K19H2V1KC6"
     };
 
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-    db.enablePersistence().catch(()=>{});
 
-    const ADMIN_EMAIL = "admin@gmail.com"; 
+    // Enable Offline Persistence for High Speed Loading
+    db.enablePersistence().catch(err => console.log("Persistence error:", err));
 
     let currentUser = null;
-    let currentUserProfile = {};
-    let selectedTargetUser = null; 
-    let activeDmChatId = null;
+    let currentUserCustomPhoto = ""; 
     let allAdsCache = [];
     let currentSearchQuery = "";
     let activeTag = "all";
@@ -291,12 +264,16 @@
       const toast = document.getElementById('toast');
       document.getElementById('toastMsg').innerText = msg;
       toast.classList.remove('opacity-0', 'pointer-events-none');
-      setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 3000);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 3000);
     }
 
+    // High Performance Image Compressor (400px Max, Low Quality for Ultra Fast Speed)
     function imageToBase64Compressed(file, maxWidth = 400, quality = 0.35) {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         if (!file || !file.type.startsWith('image/')) return resolve(null);
+        
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = (e) => {
@@ -304,345 +281,226 @@
           img.src = e.target.result;
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            let width = img.width, height = img.height;
-            if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
-            canvas.width = width; canvas.height = height;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', quality));
+
+            const base64String = canvas.toDataURL('image/jpeg', quality);
+            resolve(base64String);
           };
+          img.onerror = (err) => reject(err);
         };
+        reader.onerror = (err) => reject(err);
       });
     }
 
-    // AUTHENTICATION LOGIC
-    auth.onAuthStateChanged(async (user) => {
-      currentUser = user;
-      if (user) {
-        document.getElementById('openAuthModalBtn').classList.add('hidden');
-        document.getElementById('userInfo').classList.remove('hidden');
-        document.getElementById('loginWarning').classList.add('hidden');
-        document.getElementById('uploadBtn').disabled = false;
-        document.getElementById('uploadBtn').className = "w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg text-sm cursor-pointer";
-
-        const userDoc = await db.collection("users").doc(user.uid).get();
-        if (userDoc.exists) {
-          currentUserProfile = userDoc.data();
-        } else {
-          currentUserProfile = {
-            username: user.displayName || user.email.split('@')[0],
-            photoURL: user.photoURL || 'https://via.placeholder.com/40',
-            email: user.email,
-            isBlocked: false
-          };
-          await db.collection("users").doc(user.uid).set(currentUserProfile);
+    function audioToBase64(file) {
+      return new Promise((resolve, reject) => {
+        if (!file || !file.type.startsWith('audio/')) return resolve(null);
+        
+        if (file.size > 350000) {
+          return reject(new Error("Audio ဖိုင်အမျိုးအစား လိုင်းဆွဲအား သက်သာစေရန် 300KB အောက်သာ လက်ခံပါသည်။"));
         }
 
-        if (currentUserProfile.isBlocked) {
-          alert("သင့်အကောင့်သည် စည်းကမ်းချိုးဖောက်မှုကြောင့် ခေတ္တ ပိတ်ပင်ထားခြင်း ခံရပါသည်။");
-          auth.signOut();
-          return;
-        }
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (err) => reject(err);
+      });
+    }
 
-        document.getElementById('userImg').src = currentUserProfile.photoURL || 'https://via.placeholder.com/40';
-        document.getElementById('headerUsername').innerText = currentUserProfile.username;
+    const authModal = document.getElementById('authModal');
+    const openAuthModalBtn = document.getElementById('openAuthModalBtn');
+    const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
+    const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const emailLoginBtn = document.getElementById('emailLoginBtn');
+    const emailSignUpBtn = document.getElementById('emailSignUpBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userInfo = document.getElementById('userInfo');
+    const userImg = document.getElementById('userImg');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const loginWarning = document.getElementById('loginWarning');
+    const authStatus = document.getElementById('authStatus');
 
-        if (user.email === ADMIN_EMAIL) {
-          document.getElementById('adminBadge').classList.remove('hidden');
-          document.getElementById('adminPanelSection').classList.remove('hidden');
-          loadAdminReports();
-        }
+    openAuthModalBtn.addEventListener('click', () => authModal.classList.remove('hidden'));
+    closeAuthModalBtn.addEventListener('click', () => authModal.classList.add('hidden'));
 
-        listenToBroadcasts();
-      } else {
-        document.getElementById('openAuthModalBtn').classList.remove('hidden');
-        document.getElementById('userInfo').classList.add('hidden');
-        document.getElementById('loginWarning').classList.remove('hidden');
-        document.getElementById('adminPanelSection').classList.add('hidden');
-        document.getElementById('uploadBtn').disabled = true;
-      }
-      renderAdsData(allAdsCache);
-    });
+    function showAuthStatus(msg, isError = false) {
+      authStatus.className = `text-center text-[11px] block p-2 rounded ${isError ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`;
+      authStatus.innerText = msg;
+    }
 
-    // GOOGLE LOGIN
-    document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+    googleLoginBtn.addEventListener('click', async () => {
       const provider = new firebase.auth.GoogleAuthProvider();
       try {
         await auth.signInWithPopup(provider);
-        document.getElementById('authModal').classList.add('hidden');
-      } catch (err) { alert(err.message); }
+        authModal.classList.add('hidden');
+        showToast("Google Account ဖြင့် ဝင်ရောက်ပါပြီ");
+      } catch (err) {
+        showAuthStatus("Google Login အမှား: " + err.message, true);
+      }
     });
 
-    // EMAIL SIGNUP & LOGIN
-    document.getElementById('emailSignUpBtn').addEventListener('click', async () => {
-      const username = document.getElementById('usernameInput').value.trim();
+    emailLoginBtn.addEventListener('click', async () => {
       const email = document.getElementById('emailInput').value.trim();
       const password = document.getElementById('passwordInput').value.trim();
+      if (!email || !password) return showAuthStatus("Email နှင့် Password ဖြည့်ပါ", true);
 
-      if (!username || !email || !password) return alert("Username, Email နှင့် Password အပြည့်အစုံ ဖြည့်ပါ");
-
-      try {
-        const res = await auth.createUserWithEmailAndPassword(email, password);
-        await db.collection("users").doc(res.user.uid).set({
-          username: username,
-          email: email,
-          photoURL: 'https://via.placeholder.com/40',
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        document.getElementById('authModal').classList.add('hidden');
-        showToast("အကောင့်ဖွင့်ခြင်း အောင်မြင်သည်");
-      } catch (err) { alert(err.message); }
-    });
-
-    document.getElementById('emailLoginBtn').addEventListener('click', async () => {
-      const email = document.getElementById('emailInput').value.trim();
-      const password = document.getElementById('passwordInput').value.trim();
       try {
         await auth.signInWithEmailAndPassword(email, password);
-        document.getElementById('authModal').classList.add('hidden');
-      } catch (err) { alert(err.message); }
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut());
-
-    // PUBLIC COMMUNITY CHAT SYSTEM (FIXED)
-    db.collection("public_chats").orderBy("createdAt", "asc").limit(50).onSnapshot((snapshot) => {
-      let html = "";
-      snapshot.forEach(doc => {
-        const msg = doc.data();
-        const isMe = currentUser && msg.senderUid === currentUser.uid;
-        html += `
-          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-            <span class="text-[10px] text-slate-400 font-semibold mb-0.5 cursor-pointer" onclick="openUserProfileModal('${msg.senderUid}', '${msg.senderName}', '${msg.senderPhoto}')">${msg.senderName || 'Anonymous'}</span>
-            <div class="px-3 py-1.5 rounded-xl text-xs max-w-[80%] ${isMe ? 'bg-blue-600 text-white' : 'bg-white border text-slate-800'} shadow-sm">
-              ${msg.text}
-            </div>
-          </div>
-        `;
-      });
-      const box = document.getElementById('chatBox');
-      box.innerHTML = html || '<p class="text-center text-slate-400">စကားပြောဆိုမှု မရှိသေးပါ</p>';
-      box.scrollTop = box.scrollHeight;
-    });
-
-    document.getElementById('chatForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!currentUser) return showToast("Login အရင်ဝင်ပေးပါ");
-      const text = document.getElementById('chatInput').value.trim();
-      if (!text) return;
-
-      await db.collection("public_chats").add({
-        senderUid: currentUser.uid,
-        senderName: currentUserProfile.username || 'User',
-        senderPhoto: currentUserProfile.photoURL || 'https://via.placeholder.com/40',
-        text: text,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      document.getElementById('chatInput').value = "";
-    });
-
-    // USER PROFILE MODAL & 1-ON-1 DIRECT CHAT
-    function openUserProfileModal(uid, username, photo) {
-      if (!currentUser) return showToast("Login အရင်ဝင်ပါ");
-      if (currentUser.uid === uid) return;
-
-      selectedTargetUser = { uid, username, photo };
-      document.getElementById('actionUserImg').src = photo || 'https://via.placeholder.com/60';
-      document.getElementById('actionUserName').innerText = username;
-      
-      if (currentUser.email === ADMIN_EMAIL) {
-        document.getElementById('adminUserControls').classList.remove('hidden');
-      } else {
-        document.getElementById('adminUserControls').classList.add('hidden');
+        authModal.classList.add('hidden');
+        showToast("Login ဝင်ရောက်မှု အောင်မြင်ပါသည်။");
+      } catch (err) {
+        showAuthStatus("Login မှားယွင်းမှု: " + err.message, true);
       }
-
-      document.getElementById('profileActionModal').classList.remove('hidden');
-    }
-
-    document.getElementById('closeProfileActionBtn').addEventListener('click', () => {
-      document.getElementById('profileActionModal').classList.add('hidden');
     });
 
-    document.getElementById('startDmBtn').addEventListener('click', () => {
-      document.getElementById('profileActionModal').classList.add('hidden');
-      openDirectChat(selectedTargetUser);
+    emailSignUpBtn.addEventListener('click', async () => {
+      const email = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('passwordInput').value.trim();
+      if (!email || !password) return showAuthStatus("Email နှင့် Password ဖြည့်ပါ", true);
+
+      try {
+        await auth.createUserWithEmailAndPassword(email, password);
+        showAuthStatus("အကောင့်အောင်မြင်စွာ ဖွင့်ပြီးပါပြီ!");
+        showToast("အကောင့်သစ် ဖွင့်လှစ်ခြင်း အောင်မြင်သည်");
+        setTimeout(() => authModal.classList.add('hidden'), 1000);
+      } catch (err) {
+       showAuthStatus("အကောင့်ဖွင့်ခြင်း အမှား: " + err.message, true);
+      }
     });
 
-    function openDirectChat(targetUser) {
-      activeDmChatId = [currentUser.uid, targetUser.uid].sort().join("_");
-      document.getElementById('dmTargetName').innerText = "💬 " + targetUser.username + " နှင့် သီးသန့် စကားပြောရန်";
-      document.getElementById('directChatModal').classList.remove('hidden');
-
-      db.collection("direct_chats").doc(activeDmChatId).collection("messages").orderBy("createdAt", "asc")
-        .onSnapshot((snapshot) => {
-          let html = "";
-          snapshot.forEach(doc => {
-            const m = doc.data();
-            const isMe = m.senderUid === currentUser.uid;
-            html += `
-              <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-                <div class="p-2 rounded-xl text-xs max-w-[80%] ${isMe ? 'bg-blue-600 text-white' : 'bg-white border text-slate-800'} shadow-sm">
-                  ${m.text ? `<p>${m.text}</p>` : ''}
-                  ${m.image ? `<img src="${m.image}" class="rounded my-1 max-h-40">` : ''}
-                  ${m.video ? `<a href="${m.video}" target="_blank" class="text-blue-200 underline block text-[10px]">🔗 Video Link</a>` : ''}
-                </div>
-              </div>
-            `;
-          });
-          const box = document.getElementById('dmChatBox');
-          box.innerHTML = html || '<p class="text-center text-slate-400">စကားပြောဆိုမှု မရှိသေးပါ</p>';
-          box.scrollTop = box.scrollHeight;
-        });
-    }
-
-    document.getElementById('dmForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const text = document.getElementById('dmInput').value.trim();
-      const imageFile = document.getElementById('dmImageFile').files[0];
-      const videoUrl = document.getElementById('dmVideoUrl').value.trim();
-
-      let imageBase64 = "";
-      if (imageFile) imageBase64 = await imageToBase64Compressed(imageFile);
-
-      if (!text && !imageBase64 && !videoUrl) return;
-
-      await db.collection("direct_chats").doc(activeDmChatId).collection("messages").add({
-        senderUid: currentUser.uid,
-        text: text,
-        image: imageBase64,
-        video: videoUrl,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      document.getElementById('dmForm').reset();
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut();
+      showToast("အကောင့်မှ ထွက်လိုက်ပါပြီ");
     });
 
-    document.getElementById('closeDirectChatBtn').addEventListener('click', () => {
-      document.getElementById('directChatModal').classList.add('hidden');
+    const changeProfileBtn = document.getElementById('changeProfileBtn');
+    const profileFileInput = document.getElementById('profileFileInput');
+
+    changeProfileBtn.addEventListener('click', () => profileFileInput.click());
+
+    profileFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file || !currentUser) return;
+
+      showToast("Profile ပြင်ဆင်နေပါသည်...");
+
+      try {
+        const base64Photo = await imageToBase64Compressed(file, 120, 0.3);
+        
+        await db.collection("users").doc(currentUser.uid).set({
+          photoURL: base64Photo,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        currentUserCustomPhoto = base64Photo;
+        userImg.src = base64Photo;
+        showToast("Profile ဓာတ်ပုံ အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ!");
+        renderAdsData(allAdsCache);
+      } catch (err) {
+        showToast("ဓာတ်ပုံ တင်ရာတွင် အမှားရှိပါသည်: " + err.message);
+      }
     });
 
-    // PRIVATE REPORT & ADMIN CONTROLS
-    document.getElementById('reportUserBtn').addEventListener('click', async () => {
-      const reason = prompt(`${selectedTargetUser.username} အား Admin ထံ တိုင်ကြားလိုသည့် အကြောင်းအရင်း ရေးပါ:`);
-      if (!reason) return;
-
-      await db.collection("admin_reports").add({
-        reporterUid: currentUser.uid,
-        reporterName: currentUserProfile.username,
-        targetUid: selectedTargetUser.uid,
-        targetName: selectedTargetUser.username,
-        reason: reason,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      document.getElementById('profileActionModal').classList.add('hidden');
-      showToast("Admin ထံ သီးသန့် တိုင်ကြားမှု ပေးပို့လိုက်ပါပြီ။");
-    });
-
-    document.getElementById('sendBroadcastBtn').addEventListener('click', async () => {
-      const msg = document.getElementById('broadcastMsgInput').value.trim();
-      if (!msg) return alert("စာသား ရေးပါ");
-
-      await db.collection("broadcasts").add({
-        targetUid: "ALL",
-        message: msg,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      document.getElementById('broadcastMsgInput').value = "";
-      showToast("အဖွဲ့ဝင်အားလုံးထံ စာလွှာ ပေးပို့လိုက်ပါပြီ!");
-    });
-
-    function listenToBroadcasts() {
-      db.collection("broadcasts").orderBy("createdAt", "desc").limit(1).onSnapshot((snapshot) => {
-        snapshot.forEach(doc => {
-          const b = doc.data();
-          if (b.targetUid === "ALL" || b.targetUid === currentUser.uid) {
-            document.getElementById('announcementText').innerText = b.message;
-            document.getElementById('announcementModal').classList.remove('hidden');
+    auth.onAuthStateChanged(async (user) => {
+      currentUser = user;
+      if (user) {
+        openAuthModalBtn.classList.add('hidden');
+        userInfo.classList.remove('hidden');
+        
+        try {
+          const userDoc = await db.collection("users").doc(user.uid).get();
+          if (userDoc.exists && userDoc.data().photoURL) {
+            currentUserCustomPhoto = userDoc.data().photoURL;
+          } else {
+            currentUserCustomPhoto = user.photoURL || 'https://via.placeholder.com/40';
           }
-        });
-      });
-    }
+        } catch(e) {
+          currentUserCustomPhoto = user.photoURL || 'https://via.placeholder.com/40';
+        }
 
-    document.getElementById('closeAnnouncementBtn').addEventListener('click', () => {
-      document.getElementById('announcementModal').classList.add('hidden');
-    });
-
-    function loadAdminReports() {
-      db.collection("admin_reports").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
-        let html = "";
-        snapshot.forEach(doc => {
-          const r = doc.data();
-          html += `
-            <div class="p-2 border-b">
-              <span class="font-bold text-rose-600">${r.targetName}</span> အား <span class="font-bold text-blue-600">${r.reporterName}</span> မှ တိုင်ကြားချက်:
-              <p class="text-slate-700 font-medium">${r.reason}</p>
-            </div>
-          `;
-        });
-        document.getElementById('reportsList').innerHTML = html || '<p class="text-slate-400">တိုင်ကြားစာ မရှိပါ</p>';
-      });
-    }
-
-    // POST FEED & MEDIA PLAYER RENDERER (TIKTOK, YOUTUBE, MP4, AUDIO)
-    db.collection("ads").orderBy("createdAt", "desc").limit(20).onSnapshot((snapshot) => {
-      allAdsCache = [];
-      snapshot.forEach(doc => allAdsCache.push({ id: doc.id, ...doc.data() }));
+        userImg.src = currentUserCustomPhoto;
+        userImg.title = user.displayName || user.email;
+        loginWarning.classList.add('hidden');
+        uploadBtn.disabled = false;
+        uploadBtn.className = "w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg text-sm hover:bg-blue-700 transition cursor-pointer";
+        uploadBtn.innerText = "တင်မည်";
+      } else {
+        openAuthModalBtn.classList.remove('hidden');
+        userInfo.classList.add('hidden');
+        loginWarning.classList.remove('hidden');
+        uploadBtn.disabled = true;
+        uploadBtn.className = "w-full bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm cursor-not-allowed";
+        uploadBtn.innerText = "တင်မည် (Login ဝင်ပါ)";
+        currentUserCustomPhoto = "";
+      }
       renderAdsData(allAdsCache);
     });
 
-    function renderMediaEmbed(videoUrl) {
-      if (!videoUrl) return '';
-      if (videoUrl.includes('tiktok.com')) {
-        return `<blockquote class="tiktok-embed" cite="${videoUrl}" data-video-id="${videoUrl.split('/video/')[1]?.split('?')[0] || ''}" style="max-width: 100%; min-width: 280px;"><section></section></blockquote>`;
-      } else if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
-        let ytId = videoUrl.includes('youtu.be') ? videoUrl.split('/').pop() : videoUrl.split('v=')[1]?.split('&')[0];
-        return `<iframe class="w-full h-48 rounded-xl" src="https://www.youtube.com/embed/${ytId}" frameborder="0" allowfullscreen></iframe>`;
-      } else {
-        return `<video src="${videoUrl}" controls class="w-full rounded-xl max-h-64 bg-black"></video>`;
-      }
-    }
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
 
-    function renderAdsData(ads) {
-      let feedHtml = "", reelsHtml = "", paidHtml = "";
-      ads.forEach((data) => {
-        const authorPhoto = data.authorPhoto || 'https://via.placeholder.com/40';
-        const card = `
-          <div class="bg-white border rounded-xl p-3 shadow-sm space-y-2">
-            <div class="flex justify-between items-center">
-              <div class="flex items-center gap-2 cursor-pointer" onclick="openUserProfileModal('${data.authorUid}', '${data.authorName}', '${authorPhoto}')">
-                <img src="${authorPhoto}" class="w-6 h-6 rounded-full object-cover">
-                <div>
-                  <h4 class="font-bold text-slate-800 text-xs">${data.authorName || 'Unknown'}</h4>
-                  <span class="text-[10px] text-slate-400">#${data.subCategory || 'news'}</span>
-                </div>
-              </div>
-            </div>
-            <h3 class="font-bold text-slate-900 text-sm">${data.title}</h3>
-            <p class="text-slate-600 text-xs">${data.description || ''}</p>
-            ${data.imageUrl ? `<img src="${data.imageUrl}" class="w-full max-h-80 object-cover rounded-xl mt-2" loading="lazy">` : ''}
-            ${data.videoUrl ? renderMediaEmbed(data.videoUrl) : ''}
-            ${data.audioUrl ? `<audio controls src="${data.audioUrl}" class="w-full mt-2 h-8"></audio>` : ''}
-          </div>
-        `;
-        if (data.category === 'feed') feedHtml += card;
-        else if (data.category === 'reels') reelsHtml += card;
-        else if (data.category === 'ads') paidHtml += card;
+    navButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.getAttribute('data-tab');
+        tabContents.forEach(c => c.classList.add('hidden'));
+        document.getElementById(`tab-${targetTab}`).classList.remove('hidden');
+        navButtons.forEach(b => { b.classList.remove('text-blue-600'); b.classList.add('text-slate-500'); });
+        btn.classList.remove('text-slate-500'); btn.classList.add('text-blue-600');
+        window.scrollTo(0, 0);
       });
+    });
 
-      document.getElementById('feedAds').innerHTML = feedHtml || '<p class="text-center text-slate-400 py-8 text-xs">သတင်းများ မရှိသေးပါ</p>';
-      document.getElementById('reelsAds').innerHTML = reelsHtml || '<p class="text-center text-slate-400 py-8 text-xs">Reels မရှိသေးပါ</p>';
-      document.getElementById('paidAds').innerHTML = paidHtml || '<p class="text-center text-slate-400 py-8 text-xs">ကြော်ငြာ မရှိသေးပါ</p>';
-      
-      if (window.TTEmbed) window.TTEmbed.reload();
+    const tagButtons = document.querySelectorAll('.tag-btn');
+    tagButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeTag = btn.getAttribute('data-tag');
+        tagButtons.forEach(b => {
+          b.classList.remove('bg-blue-600', 'text-white');
+          b.classList.add('bg-slate-100', 'text-slate-600');
+        });
+        btn.classList.remove('bg-slate-100', 'text-slate-600');
+        btn.classList.add('bg-blue-600', 'text-white');
+        renderAdsData(allAdsCache);
+      });
+    });
+
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', (e) => {
+      currentSearchQuery = e.target.value.toLowerCase().trim();
+      renderAdsData(allAdsCache);
+    });
+    document.getElementById('clearSearchBtn').addEventListener('click', () => {
+      searchInput.value = "";
+      currentSearchQuery = "";
+      renderAdsData(allAdsCache);
+    });
+
+    function getYoutubeId(url) {
+      if (!url) return null;
+      const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+      return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // UPLOAD FORM SUBMIT
+    function getTikTokId(url) {
+      if (!url) return null;
+      const match = url.match(/video\/(\d+)/);
+      return match ? match[1] : null;
+    }
+
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!currentUser) return showToast("Login အရင်ဝင်ပေးပါ");
+      if (!currentUser) return showToast("Login အရင်ဝင်ပါ!");
 
       const title = document.getElementById('adTitle').value.trim();
       const desc = document.getElementById('adDesc').value.trim();
@@ -650,41 +508,319 @@
       const subCat = document.getElementById('adSubCat').value;
       const videoLink = document.getElementById('adVideoLink').value.trim();
       const imageFile = document.getElementById('adImageFile').files[0];
+      const audioFile = document.getElementById('adAudioFile').files[0];
+      
+      const status = document.getElementById('uploadStatus');
+      uploadBtn.disabled = true;
 
-      let imageBase64 = "";
-      if (imageFile) imageBase64 = await imageToBase64Compressed(imageFile);
+      try {
+        let imageUrl = "";
+        let audioBase64 = "";
 
-      await db.collection("ads").add({
-        title,
-        description: desc,
-        category: cat,
-        subCategory: subCat,
-        imageUrl: imageBase64,
-        videoUrl: videoLink,
-        authorUid: currentUser.uid,
-        authorName: currentUserProfile.username || 'User',
-        authorPhoto: currentUserProfile.photoURL || 'https://via.placeholder.com/40',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+        if (imageFile) {
+          status.classList.remove('hidden');
+          status.className = "text-center text-xs block bg-blue-50 text-blue-700 p-2 rounded font-semibold border border-blue-200";
+          status.innerText = "🖼️ ဓာတ်ပုံကို လိုင်းဆွဲအား သက်သာစေရန် ချုံ့ပေးနေပါသည်...";
+          
+          imageUrl = await imageToBase64Compressed(imageFile, 400, 0.35);
+        }
 
-      document.getElementById('uploadForm').reset();
-      showToast("ပို့စ် တင်ခြင်း အောင်မြင်သည်");
+        if (audioFile) {
+          status.classList.remove('hidden');
+          status.className = "text-center text-xs block bg-purple-50 text-purple-700 p-2 rounded font-semibold border border-purple-200";
+          status.innerText = "🎵 Audio ဖိုင် စစ်ဆေးနေပါသည်...";
+          
+          audioBase64 = await audioToBase64(audioFile);
+        }
+
+        const postData = {
+          title: title,
+          description: desc,
+          category: cat,
+          subCategory: subCat,
+          authorUid: currentUser.uid,
+          authorName: currentUser.displayName || currentUser.email.split('@')[0],
+          authorEmail: currentUser.email,
+          authorPhoto: currentUserCustomPhoto || "",
+          likes: [],
+          comments: [],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (imageUrl) postData.imageUrl = imageUrl;
+        if (audioBase64) postData.audioUrl = audioBase64;
+        if (videoLink) postData.videoUrl = videoLink;
+
+        await db.collection("ads").add(postData);
+
+        status.className = "text-center text-xs block bg-emerald-50 text-emerald-700 p-2.5 rounded font-semibold border border-emerald-200";
+        status.innerText = "🎉 ပို့စ် တင်ပြီးပါပြီ!";
+        showToast("ပို့စ်အသစ် တင်ပြီးပါပြီ!");
+        document.getElementById('uploadForm').reset();
+      } catch (err) {
+        status.className = "text-center text-xs block bg-rose-50 text-rose-600 p-2 rounded font-semibold border border-rose-200";
+        status.innerText = "❌ တင်ရာတွင် အမှားရှိပါသည်: " + err.message;
+      } finally {
+        uploadBtn.disabled = false;
+      }
     });
 
-    // NAVIGATION TABS
-    const navButtons = document.querySelectorAll('.nav-btn');
-    navButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const targetTab = btn.getAttribute('data-tab');
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-        document.getElementById(`tab-${targetTab}`).classList.remove('hidden');
-        navButtons.forEach(b => b.classList.replace('text-blue-600', 'text-slate-500'));
-        btn.classList.replace('text-slate-500', 'text-blue-600');
+    async function deletePost(id, authorUid) {
+      if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
+      if (currentUser.uid !== authorUid) return showToast("မိမိတင်ထားသော ပို့စ်များကိုသာ ဖျက်ပိုင်ခွင့်ရှိပါသည်။");
+
+      if (confirm("ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?")) {
+        try {
+          await db.collection("ads").doc(id).delete();
+          showToast("ပို့စ်ကို ဖျက်ပြီးပါပြီ!");
+        } catch (err) {
+          showToast("ဖျက်ရာတွင် အမှားရှိပါသည်: " + err.message);
+        }
+      }
+    }
+
+    async function toggleLike(postId, likesArray) {
+      if (!currentUser) return showToast("Like ပေးရန် အကောင့်ဝင်ပါ!");
+      const postRef = db.collection("ads").doc(postId);
+      const uid = currentUser.uid;
+
+      if (likesArray.includes(uid)) {
+        await postRef.update({ likes: firebase.firestore.FieldValue.arrayRemove(uid) });
+      } else {
+        await postRef.update({ likes: firebase.firestore.FieldValue.arrayUnion(uid) });
+      }
+    }
+
+    async function addComment(postId, e) {
+      e.preventDefault();
+      if (!currentUser) return showToast("Comment ရေးရန် အကောင့်ဝင်ပါ!");
+      const input = e.target.querySelector('input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const commentObj = {
+        userName: currentUser.displayName || currentUser.email.split('@')[0],
+        userPhoto: currentUserCustomPhoto || "",
+        text: text,
+        createdAt: new Date().toISOString()
+      };
+
+      await db.collection("ads").doc(postId).update({
+        comments: firebase.firestore.FieldValue.arrayUnion(commentObj)
       });
+      input.value = "";
+    }
+
+    function sharePost(title, url) {
+      if (navigator.share) {
+        navigator.share({ title: title, url: url || window.location.href });
+      } else {
+        navigator.clipboard.writeText(url || window.location.href);
+        showToast("Post Link ကို Copy ကူးပြီးပါပြီ!");
+      }
+    }
+
+    // High Speed Fetch Optimization (Limit 20 posts to reduce bandwidth consumption)
+    db.collection("ads").orderBy("createdAt", "desc").limit(20).onSnapshot((snapshot) => {
+      allAdsCache = [];
+      snapshot.forEach(doc => {
+        allAdsCache.push({ id: doc.id, ...doc.data() });
+      });
+      renderAdsData(allAdsCache);
     });
 
-    document.getElementById('openAuthModalBtn').addEventListener('click', () => document.getElementById('authModal').classList.remove('hidden'));
-    document.getElementById('closeAuthModalBtn').addEventListener('click', () => document.getElementById('authModal').classList.add('hidden'));
+    function renderAdsData(ads) {
+      let feedHtml = "", reelsHtml = "", paidHtml = "";
+
+      const filtered = ads.filter(item => {
+        const matchesSearch = !currentSearchQuery || 
+          (item.title || "").toLowerCase().includes(currentSearchQuery) || 
+          (item.description || "").toLowerCase().includes(currentSearchQuery);
+        
+        const matchesTag = (activeTag === "all") || (item.subCategory === activeTag);
+        return matchesSearch && matchesTag;
+      });
+
+      filtered.forEach((data) => {
+        const cat = data.category || 'feed';
+        const likes = data.likes || [];
+        const comments = data.comments || [];
+        const isLiked = currentUser && likes.includes(currentUser.uid);
+
+        let mediaTag = "";
+
+        if (data.imageUrl) {
+          mediaTag += `
+            <div class="relative rounded-xl overflow-hidden mt-2 border bg-slate-900 group">
+              <img src="${data.imageUrl}" class="w-full max-h-80 object-cover" loading="lazy">
+              ${data.audioUrl ? `
+                <div class="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-md rounded-lg p-2 flex items-center gap-2 border border-white/20">
+                  <div class="w-6 h-6 rounded-full bg-slate-800 border border-white flex items-center justify-center animate-spin-disc text-[10px]">🎵</div>
+                  <audio controls class="h-6 flex-1 scale-90 -ml-2" preload="none">
+                    <source src="${data.audioUrl}" type="audio/mpeg">
+                  </audio>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        } else if (data.audioUrl) {
+          mediaTag += `
+            <div class="mt-2 p-2 bg-purple-50 border border-purple-200 rounded-xl flex items-center gap-2">
+              <span class="text-base">🎧</span>
+              <audio controls class="w-full h-7" preload="none">
+                <source src="${data.audioUrl}" type="audio/mpeg">
+              </audio>
+            </div>
+          `;
+        }
+
+        if (data.videoUrl) {
+          const ytId = getYoutubeId(data.videoUrl);
+          const ttId = getTikTokId(data.videoUrl);
+
+          if (ytId) {
+            mediaTag += `
+              <div class="mt-2 rounded-xl overflow-hidden border bg-black aspect-video">
+                <iframe class="w-full h-full" src="https://www.youtube.com/embed/${ytId}" frameborder="0" allowfullscreen loading="lazy"></iframe>
+              </div>`;
+          } else if (ttId) {
+            mediaTag += `
+              <blockquote class="tiktok-embed mt-2" cite="${data.videoUrl}" data-video-id="${ttId}" style="max-width: 100%;">
+                <section></section>
+              </blockquote>`;
+          } else if (data.videoUrl.endsWith('.mp4') || data.videoUrl.includes('.mp4')) {
+            mediaTag += `
+              <div class="mt-2 rounded-xl overflow-hidden border bg-black">
+                <video controls preload="metadata" class="w-full max-h-80 object-cover">
+                  <source src="${data.videoUrl}" type="video/mp4">
+                </video>
+              </div>`;
+          } else {
+            mediaTag += `
+              <a href="${data.videoUrl}" target="_blank" class="mt-2 block p-2 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-700 truncate">
+                🔗 ${data.videoUrl}
+              </a>`;
+          }
+        }
+
+        const authorPhoto = data.authorPhoto ? `<img src="${data.authorPhoto}" class="w-6 h-6 rounded-full object-cover" loading="lazy">` : '<div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px]">👤</div>';
+        const canDelete = currentUser && (currentUser.uid === data.authorUid);
+
+        let commentsList = comments.slice(-2).map(c => `
+          <div class="text-[11px] bg-slate-100 p-1.5 rounded flex items-start gap-1.5">
+            <img src="${c.userPhoto || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full mt-0.5 object-cover" loading="lazy">
+            <div><span class="font-bold text-slate-700">${c.userName}:</span> ${c.text}</div>
+          </div>
+        `).join('');
+
+        const card = `
+          <div class="bg-white border rounded-xl p-3 shadow-sm space-y-2">
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-2">
+                ${authorPhoto}
+                <div>
+                  <h4 class="font-bold text-slate-800 text-xs">${data.authorName || 'Unknown'}</h4>
+                  <span class="text-[10px] text-slate-400">${data.subCategory ? '#' + data.subCategory : ''}</span>
+                </div>
+              </div>
+              ${canDelete ? `<button onclick="deletePost('${data.id}', '${data.authorUid}')" class="text-xs text-rose-500 font-semibold hover:underline">🗑️ ဖျက်မည်</button>` : ''}
+            </div>
+
+            <h3 class="font-bold text-slate-900 text-sm">${data.title}</h3>
+            ${data.description ? `<p class="text-slate-600 text-xs leading-relaxed">${data.description}</p>` : ''}
+            
+            ${mediaTag}
+
+            <div class="flex items-center justify-between border-t border-b py-1.5 text-xs text-slate-600 font-medium mt-2">
+              <button onclick="toggleLike('${data.id}', ${JSON.stringify(likes)})" class="flex items-center gap-1 ${isLiked ? 'text-rose-500 font-bold' : ''}">
+                ${isLiked ? '❤️' : '🤍'} <span>${likes.length}</span>
+              </button>
+              <button class="flex items-center gap-1">💬 <span>${comments.length}</span></button>
+              <button onclick="sharePost('${data.title}', '${data.videoUrl || data.imageUrl || ''}')" class="flex items-center gap-1 text-blue-600">↪️ ရှယ်မည်</button>
+            </div>
+
+            <div class="space-y-1.5">
+              ${commentsList}
+              <form onsubmit="addComment('${data.id}', event)" class="flex gap-1.5 pt-1">
+                <input type="text" placeholder="ကွန်မန့်ရေးရန်..." class="flex-1 border p-1.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500">
+                <button type="submit" class="bg-slate-800 text-white px-2.5 py-1 rounded-lg text-xs font-semibold">ပို့</button>
+              </form>
+            </div>
+          </div>
+        `;
+
+        if (cat === 'feed') feedHtml += card;
+        if (cat === 'reels') reelsHtml += card;
+        if (cat === 'ads') paidHtml += card;
+      });
+
+      document.getElementById('feedAds').innerHTML = feedHtml || '<p class="text-center text-slate-400 py-8 text-xs">သတင်းများ မရှိသေးပါ</p>';
+      document.getElementById('reelsAds').innerHTML = reelsHtml || '<p class="text-center text-slate-400 py-8 text-xs">Reels မရှိသေးပါ</p>';
+      document.getElementById('paidAds').innerHTML = paidHtml || '<p class="text-center text-slate-400 py-8 text-xs">VIP ကြော်ငြာ မရှိသေးပါ</p>';
+
+      if (window.tiktokEmbed) window.tiktokEmbed.load();
+    }
+
+    // Chat System with Limit (Last 30 messages to optimize performance)
+    document.getElementById('chatForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const senderName = currentUser ? (currentUser.displayName || currentUser.email.split('@')[0]) : "ဧည့်သည်";
+      const senderPhoto = currentUser ? currentUserCustomPhoto : "";
+      const senderUid = currentUser ? currentUser.uid : "guest";
+
+      try {
+        await db.collection("chats").add({
+          text: text,
+          sender: senderName,
+          senderPhoto: senderPhoto,
+          senderUid: senderUid,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        input.value = "";
+      } catch (err) {
+        showToast("စာပို့ရာတွင် အမှားရှိပါသည်: " + err.message);
+      }
+    });
+
+    db.collection("chats").orderBy("createdAt", "desc").limit(25).onSnapshot((snapshot) => {
+      let messages = [];
+      snapshot.forEach(doc => {
+        messages.unshift(doc.data());
+      });
+
+      let html = "";
+      messages.forEach(c => {
+        const isMe = currentUser && (currentUser.uid === c.senderUid);
+        const photo = c.senderPhoto ? `<img src="${c.senderPhoto}" class="w-5 h-5 rounded-full inline object-cover" loading="lazy">` : '';
+        
+        let timeStr = "";
+        if (c.createdAt && c.createdAt.toDate) {
+          const date = c.createdAt.toDate();
+          timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        html += `
+          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+            <div class="flex items-center gap-1 text-[10px] text-slate-400 mb-0.5">
+              ${!isMe ? photo : ''}
+              <span class="font-bold text-slate-600">${c.sender || 'Guest'}</span>
+              ${isMe ? photo : ''}
+              <span class="text-[9px] text-slate-400 ml-1">${timeStr}</span>
+            </div>
+            <div class="p-2 rounded-xl text-xs max-w-[80%] ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border text-slate-800 rounded-tl-none'}">
+              ${c.text}
+            </div>
+          </div>
+        `;
+      });
+      const chatBox = document.getElementById('chatBox');
+      chatBox.innerHTML = html || '<p class="text-center text-slate-400 text-xs">စကားပြောဆိုမှု မရှိသေးပါ</p>';
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
   </script>
 </body>
 </html>
