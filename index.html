@@ -197,7 +197,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">🎬 Video ဖိုင် တင်ရန် (MP4) သို့မဟုတ် Link</label>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">🎬 Video ဖိုင် တင်ရန် (MP4 - အများဆုံး 15MB) သို့မဟုတ် Link</label>
               <input type="file" id="adVideoFile" accept="video/mp4,video/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 mb-1.5">
               <input type="url" id="adVideoLink" placeholder="သို့မဟုတ် YouTube/TikTok Link ထည့်ပါ (https://...)" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
             </div>
@@ -258,14 +258,16 @@
       }, 3000);
     }
 
-    // --- Image Compression Engine (ဖိုင်ဆိုက်ချုံ့ပေးသည့် စနစ်) ---
-    function compressImage(file, maxWidth = 1000, quality = 0.7) {
+    // --- Fast Image Compression Engine ---
+    function compressImage(file, maxWidth = 800, quality = 0.6) {
       return new Promise((resolve, reject) => {
+        if (!file.type.startsWith('image/')) return resolve(file);
+        
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = (event) => {
+        reader.onload = (e) => {
           const img = new Image();
-          img.src = event.target.result;
+          img.src = e.target.result;
           img.onload = () => {
             const canvas = document.createElement('canvas');
             let width = img.width;
@@ -282,15 +284,33 @@
             ctx.drawImage(img, 0, 0, width, height);
 
             canvas.toBlob((blob) => {
-              if (blob) {
-                resolve(blob);
-              } else {
-                reject(new Error("Image compression error"));
-              }
+              if (blob) resolve(blob);
+              else resolve(file);
             }, 'image/jpeg', quality);
           };
+          img.onerror = () => resolve(file);
         };
-        reader.onerror = (error) => reject(error);
+        reader.onerror = () => resolve(file);
+      });
+    }
+
+    // --- Upload Task Engine with Percent Tracker ---
+    function uploadFileWithProgress(storagePath, file, statusElement, labelText) {
+      return new Promise((resolve, reject) => {
+        const ref = storage.ref(storagePath);
+        const task = ref.put(file);
+
+        task.on('state_changed', 
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            statusElement.innerText = `${labelText}: ${Math.round(progress)}% တက်ပြီးပါပြီ...`;
+          }, 
+          (error) => reject(error), 
+          async () => {
+            const downloadURL = await task.snapshot.ref.getDownloadURL();
+            resolve(downloadURL);
+          }
+        );
       });
     }
 
@@ -361,7 +381,7 @@
       showToast("အကောင့်မှ ထွက်လိုက်ပါပြီ");
     });
 
-    // Custom Profile Photo Upload With Compressor
+    // Custom Profile Photo Upload
     const changeProfileBtn = document.getElementById('changeProfileBtn');
     const profileFileInput = document.getElementById('profileFileInput');
 
@@ -374,8 +394,7 @@
       showToast("Profile ဓာတ်ပုံ ချုံ့၍ တင်နေပါသည်...");
 
       try {
-        // Compress profile photo before uploading
-        const compressedBlob = await compressImage(file, 400, 0.8);
+        const compressedBlob = await compressImage(file, 300, 0.7);
         const storageRef = storage.ref(`profiles/${currentUser.uid}_${Date.now()}.jpg`);
         const snapshot = await storageRef.put(compressedBlob);
         const photoURL = await snapshot.ref.getDownloadURL();
@@ -465,7 +484,7 @@
       return match ? match[1] : null;
     }
 
-    // Multi-media Post Upload With Image Compressor & Audio Upload
+    // High Speed Post Upload Engine
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!currentUser) return showToast("Login အရင်ဝင်ပါ!");
@@ -482,37 +501,35 @@
       
       const status = document.getElementById('uploadStatus');
 
+      // Video File Size Check Guard (Max 25MB for Smooth Upload)
+      if (videoFile && videoFile.size > 25 * 1024 * 1024) {
+        alert("⚠️ Video ဖိုင်ဆိုက် အလွန်ကြီးမားနေပါသည်။ (25MB အောက် ဖိုင်များကိုသာ တိုက်ရိုက်တင်ပါ သို့မဟုတ် YouTube Link ကို အသုံးပြုပါ)");
+        return;
+      }
+
       status.className = "text-center text-xs block bg-blue-50 text-blue-600 p-2 rounded font-semibold";
-      status.innerText = "ဖိုင်များကို ပြုပြင်၍ တင်နေပါသည်... ခဏစောင့်ပါ";
+      status.innerText = "ဖိုင်များကို ပြုပြင်နေပါသည်...";
 
       try {
         let imageUrl = "";
         let audioUrl = "";
         let directVideoUrl = "";
 
-        // 1. Upload & Compress Image
+        // 1. Image Compressor & Upload
         if (imageFile) {
-          status.innerText = "ဓာတ်ပုံဆိုက်ကို ချုံ့၍ တင်နေပါသည်...";
-          const compressedBlob = await compressImage(imageFile, 1000, 0.75);
-          const imgRef = storage.ref(`posts/images/${Date.now()}_img.jpg`);
-          const snapshot = await imgRef.put(compressedBlob);
-          imageUrl = await snapshot.ref.getDownloadURL();
+          status.innerText = "🖼️ ဓာတ်ပုံကို ဆိုက်ချုံ့နေပါသည်...";
+          const compressedBlob = await compressImage(imageFile, 800, 0.65);
+          imageUrl = await uploadFileWithProgress(`posts/images/${Date.now()}_img.jpg`, compressedBlob, status, "🖼️ ဓာတ်ပုံ တင်နေပါသည်");
         }
 
-        // 2. Upload Audio File
+        // 2. Audio Upload
         if (audioFile) {
-          status.innerText = "အသံဖိုင် (Audio) တင်နေပါသည်...";
-          const audioRef = storage.ref(`posts/audios/${Date.now()}_${audioFile.name}`);
-          const snapshot = await audioRef.put(audioFile);
-          audioUrl = await snapshot.ref.getDownloadURL();
+          audioUrl = await uploadFileWithProgress(`posts/audios/${Date.now()}_${audioFile.name}`, audioFile, status, "🎵 အသံဖိုင် တင်နေပါသည်");
         }
 
-        // 3. Upload Direct MP4 Video File
+        // 3. Direct MP4 Video Upload
         if (videoFile) {
-          status.innerText = "ဗီဒီယို ဖိုင် တင်နေပါသည်...";
-          const videoRef = storage.ref(`posts/videos/${Date.now()}_${videoFile.name}`);
-          const snapshot = await videoRef.put(videoFile);
-          directVideoUrl = await snapshot.ref.getDownloadURL();
+          directVideoUrl = await uploadFileWithProgress(`posts/videos/${Date.now()}_${videoFile.name}`, videoFile, status, "🎬 ဗီဒီယို တင်နေပါသည်");
         }
 
         const postData = {
@@ -797,4 +814,3 @@
   </script>
 </body>
 </html>
-        
