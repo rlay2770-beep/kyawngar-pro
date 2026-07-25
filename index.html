@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Cache Control Tags (No Cache) -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
   <title>KyawNgar Pro</title>
   
   <meta name="theme-color" content="#2563eb">
@@ -10,8 +16,18 @@
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script async src="https://www.tiktok.com/embed.js"></script>
+
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex flex-col font-sans pb-20">
+<body class="bg-slate-100 min-h-screen flex flex-col font-sans pb-20 select-none">
+
+  <!-- Toast Notification Box -->
+  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white text-xs px-4 py-2.5 rounded-full shadow-lg transition-all duration-300 opacity-0 pointer-events-none flex items-center gap-2">
+    <span id="toastMsg"></span>
+  </div>
 
   <!-- Header -->
   <header class="bg-blue-600 text-white p-3.5 shadow-md flex justify-between items-center sticky top-0 z-50">
@@ -25,11 +41,17 @@
       </button>
 
       <div id="userInfo" class="hidden flex items-center gap-2">
-        <img id="userImg" class="w-8 h-8 rounded-full border-2 border-white shadow object-cover">
+        <div class="relative group cursor-pointer" id="changeProfileBtn" title="Profile ဓာတ်ပုံပြောင်းရန် နှိပ်ပါ">
+          <img id="userImg" class="w-8 h-8 rounded-full border-2 border-white shadow object-cover">
+          <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[9px] text-white">📷</div>
+        </div>
         <button id="logoutBtn" class="bg-rose-500 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-rose-600 transition">ထွက်မည်</button>
       </div>
     </div>
   </header>
+
+  <!-- Hidden Profile Photo Input -->
+  <input type="file" id="profileFileInput" accept="image/*" class="hidden">
 
   <!-- Login Modal Popup (Google + Email) -->
   <div id="authModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
@@ -114,7 +136,10 @@
     <!-- Tab 4: Chat -->
     <div id="tab-chat" class="tab-content space-y-4 hidden">
       <div class="bg-white p-4 rounded-xl shadow border flex flex-col h-[480px]">
-        <h3 class="text-xs font-bold text-slate-500 mb-2 pb-2 border-b">💬 Community Chat</h3>
+        <h3 class="text-xs font-bold text-slate-500 mb-2 pb-2 border-b flex justify-between items-center">
+          <span>💬 Community Chat</span>
+          <span class="text-[10px] text-slate-400">Live</span>
+        </h3>
         <div id="chatBox" class="flex-1 overflow-y-auto space-y-3 mb-3 p-2 bg-slate-50 rounded text-sm">
           <p class="text-center text-slate-400 text-xs">စကားပြောဆိုမှု မရှိသေးပါ...</p>
         </div>
@@ -219,6 +244,16 @@
     let currentSearchQuery = "";
     let activeTag = "all";
 
+    // --- Toast Notification Helper ---
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').innerText = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+
     // --- Modal Auth Controls ---
     const authModal = document.getElementById('authModal');
     const openAuthModalBtn = document.getElementById('openAuthModalBtn');
@@ -247,6 +282,7 @@
       try {
         await auth.signInWithPopup(provider);
         authModal.classList.add('hidden');
+        showToast("Google Account ဖြင့် အောင်မြင်စွာ Login ဝင်လိုက်ပါပြီ");
       } catch (err) {
         showAuthStatus("Google Login အမှား: " + err.message, true);
       }
@@ -261,6 +297,7 @@
       try {
         await auth.signInWithEmailAndPassword(email, password);
         authModal.classList.add('hidden');
+        showToast("Login ဝင်ရောက်မှု အောင်မြင်ပါသည်။");
       } catch (err) {
         showAuthStatus("Login မှားယွင်းမှု: " + err.message, true);
       }
@@ -275,13 +312,43 @@
       try {
         await auth.createUserWithEmailAndPassword(email, password);
         showAuthStatus("အကောင့်အောင်မြင်စွာ ဖွင့်ပြီးပါပြီ!");
+        showToast("အကောင့်သစ် ဖွင့်လှစ်ခြင်း အောင်မြင်သည်");
         setTimeout(() => authModal.classList.add('hidden'), 1000);
       } catch (err) {
         showAuthStatus("အကောင့်ဖွင့်ခြင်း အမှား: " + err.message, true);
       }
     });
 
-    logoutBtn.addEventListener('click', () => auth.signOut());
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut();
+      showToast("အကောင့်မှ ထွက်လိုက်ပါပြီ");
+    });
+
+    // Custom Profile Photo Upload
+    const changeProfileBtn = document.getElementById('changeProfileBtn');
+    const profileFileInput = document.getElementById('profileFileInput');
+
+    changeProfileBtn.addEventListener('click', () => profileFileInput.click());
+
+    profileFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file || !currentUser) return;
+
+      showToast("Profile ဓာတ်ပုံ တင်နေပါသည်...");
+
+      try {
+        const storageRef = storage.ref(`profiles/${currentUser.uid}_${Date.now()}`);
+        const snapshot = await storageRef.put(file);
+        const photoURL = await snapshot.ref.getDownloadURL();
+
+        await currentUser.updateProfile({ photoURL: photoURL });
+        userImg.src = photoURL;
+        showToast("Profile ဓာတ်ပုံ အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ!");
+        renderAdsData(allAdsCache);
+      } catch (err) {
+        showToast("ဓာတ်ပုံ တင်ရာတွင် အမှားရှိပါသည်: " + err.message);
+      }
+    });
 
     auth.onAuthStateChanged((user) => {
       currentUser = user;
@@ -320,7 +387,7 @@
       });
     });
 
-    // --- Tags Filtering ---
+    /// --- Tags Filtering ---
     const tagButtons = document.querySelectorAll('.tag-btn');
     tagButtons.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -362,7 +429,7 @@
     // Post Upload
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!currentUser) return alert("Login အရင်ဝင်ပါ!");
+      if (!currentUser) return showToast("Login အရင်ဝင်ပါ!");
 
       const title = document.getElementById('adTitle').value.trim();
       const desc = document.getElementById('adDesc').value.trim();
@@ -404,6 +471,7 @@
 
         status.className = "text-center text-xs block bg-emerald-50 text-emerald-600 p-2 rounded font-semibold";
         status.innerText = "🎉 အောင်မြင်စွာ တင်ပြီးပါပြီ!";
+        showToast("ပို့စ်အသစ် တင်ပြီးပါပြီ!");
         document.getElementById('uploadForm').reset();
       } catch (err) {
         status.className = "text-center text-xs block bg-rose-50 text-rose-600 p-2 rounded font-semibold";
@@ -412,21 +480,21 @@
     });
 
     async function deletePost(id, authorUid) {
-      if (!currentUser) return alert("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
-      if (currentUser.uid !== authorUid) return alert("မိမိတင်ထားသော ပို့စ်များကိုသာ ဖျက်ပိုင်ခွင့်ရှိပါသည်။");
+      if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
+      if (currentUser.uid !== authorUid) return showToast("မိမိတင်ထားသော ပို့စ်များကိုသာ ဖျက်ပိုင်ခွင့်ရှိပါသည်။");
 
       if (confirm("ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?")) {
         try {
           await db.collection("ads").doc(id).delete();
-          alert("ပို့စ်ကို ဖျက်ပြီးပါပြီ!");
+          showToast("ပို့စ်ကို ဖျက်ပြီးပါပြီ!");
         } catch (err) {
-          alert("ဖျက်ရာတွင် အမှားရှိပါသည်: " + err.message);
+          showToast("ဖျက်ရာတွင် အမှားရှိပါသည်: " + err.message);
         }
       }
     }
 
     async function toggleLike(postId, likesArray) {
-      if (!currentUser) return alert("Like ပေးရန် အကောင့်ဝင်ပါ!");
+      if (!currentUser) return showToast("Like ပေးရန် အကောင့်ဝင်ပါ!");
       const postRef = db.collection("ads").doc(postId);
       const uid = currentUser.uid;
 
@@ -439,7 +507,7 @@
 
     async function addComment(postId, e) {
       e.preventDefault();
-      if (!currentUser) return alert("Comment ရေးရန် အကောင့်ဝင်ပါ!");
+      if (!currentUser) return showToast("Comment ရေးရန် အကောင့်ဝင်ပါ!");
       const input = e.target.querySelector('input');
       const text = input.value.trim();
       if (!text) return;
@@ -462,7 +530,7 @@
         navigator.share({ title: title, url: url || window.location.href });
       } else {
         navigator.clipboard.writeText(url || window.location.href);
-        alert("Post Link ကို Copy ကူးပြီးပါပြီ!");
+        showToast("Post Link ကို Copy ကူးပြီးပါပြီ!");
       }
     }
 
@@ -517,12 +585,12 @@
           }
         }
 
-        const authorPhoto = data.authorPhoto ? `<img src="${data.authorPhoto}" class="w-6 h-6 rounded-full">` : '';
+        const authorPhoto = data.authorPhoto ? `<img src="${data.authorPhoto}" class="w-6 h-6 rounded-full object-cover">` : '<div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px]">👤</div>';
         const canDelete = currentUser && (currentUser.uid === data.authorUid);
 
         let commentsList = comments.slice(-3).map(c => `
           <div class="text-[11px] bg-slate-100 p-1.5 rounded flex items-start gap-1.5">
-            <img src="${c.userPhoto || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full mt-0.5">
+            <img src="${c.userPhoto || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full mt-0.5 object-cover">
             <div><span class="font-bold text-slate-700">${c.userName}:</span> ${c.text}</div>
           </div>
         `).join('');
@@ -596,7 +664,7 @@
         });
         input.value = "";
       } catch (err) {
-        alert("စာပို့ရာတွင် အမှားရှိပါသည်: " + err.message);
+        showToast("စာပို့ရာတွင် အမှားရှိပါသည်: " + err.message);
       }
     });
 
@@ -605,7 +673,13 @@
       snapshot.forEach(doc => {
         const c = doc.data();
         const isMe = currentUser && (currentUser.uid === c.senderUid);
-        const photo = c.senderPhoto ? `<img src="${c.senderPhoto}" class="w-5 h-5 rounded-full inline">` : '';
+        const photo = c.senderPhoto ? `<img src="${c.senderPhoto}" class="w-5 h-5 rounded-full inline object-cover">` : '';
+        
+        let timeStr = "";
+        if (c.createdAt && c.createdAt.toDate) {
+          const date = c.createdAt.toDate();
+          timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
 
         html += `
           <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
@@ -613,6 +687,7 @@
               ${!isMe ? photo : ''}
               <span class="font-bold text-slate-600">${c.sender || 'Guest'}</span>
               ${isMe ? photo : ''}
+              <span class="text-[9px] text-slate-400 ml-1">${timeStr}</span>
             </div>
             <div class="p-2 rounded-xl text-xs max-w-[80%] ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border text-slate-800 rounded-tl-none'}">
               ${c.text}
