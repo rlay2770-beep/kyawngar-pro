@@ -20,7 +20,6 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
-    /* TikTok Floating Music Disc Animation */
     @keyframes spin-slow {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
@@ -87,6 +86,10 @@
           <label class="block text-[11px] font-semibold text-slate-600 mb-1">စကားဝှက် (Password)</label>
           <input type="password" id="passwordInput" required placeholder="******" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
         </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-600 mb-1">Username (အကောင့်ခွဲခြားရန်)</label>
+          <input type="text" id="usernameInput" placeholder="eg. kyawkyaw99" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
         
         <div class="grid grid-cols-2 gap-2 pt-1">
           <button type="button" id="emailLoginBtn" class="bg-blue-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-blue-700">Login ဝင်မည်</button>
@@ -95,6 +98,35 @@
       </form>
 
       <div id="authStatus" class="text-center text-[11px] hidden p-2 rounded"></div>
+    </div>
+  </div>
+
+  <!-- Direct Messaging Modal Popup -->
+  <div id="directChatModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-4 flex flex-col h-[480px] relative">
+      <button id="closeDirectChatBtn" class="absolute top-3 right-3 text-slate-400 text-lg font-bold">✕</button>
+      <h3 class="text-xs font-bold text-slate-700 mb-2 pb-2 border-b flex items-center gap-2">
+        <span id="dmTargetName">💬 Private Chat</span>
+      </h3>
+      <div id="dmBox" class="flex-1 overflow-y-auto space-y-2 p-2 bg-slate-50 rounded text-xs mb-2">
+        <p class="text-center text-slate-400">စာတိုမရှိသေးပါ...</p>
+      </div>
+      <form id="dmForm" class="flex gap-2">
+        <input type="text" id="dmInput" placeholder="သီးသန့် စာရိုက်ပါ..." required class="flex-1 border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+        <button type="submit" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold">ပို့မည်</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Appeal Modal Popup -->
+  <div id="appealModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-4 space-y-3 relative">
+      <button id="closeAppealModalBtn" class="absolute top-3 right-3 text-slate-400 text-lg font-bold">✕</button>
+      <h3 class="text-xs font-bold text-slate-800">📩 ပို့စ်အယူခံဝင်ခြင်း</h3>
+      <p class="text-[11px] text-slate-500">သင့်ပို့စ်အား ခေတ္တဖျောက်ထားရခြင်းအတွက် အယူခံလွှာအား Admin ထံ ပေးပို့နိုင်ပါသည်။</p>
+      <input type="hidden" id="appealPostId">
+      <textarea id="appealReason" rows="3" placeholder="အယူခံဝင်လိုသည့် အကြောင်းအရင်း ရေးသားပါ..." class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+      <button id="submitAppealBtn" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg text-xs">Admin ထံ ပို့မည်</button>
     </div>
   </div>
 
@@ -154,8 +186,17 @@
       </div>
     </div>
 
-    <!-- Tab 5: Admin Upload -->
+    <!-- Tab 5: Admin / Upload Tab -->
     <div id="tab-admin" class="tab-content space-y-4 hidden">
+      <!-- Admin Notice Broadcast Box (Visible for Admin Only) -->
+      <div id="adminPanelBox" class="bg-amber-50 rounded-xl shadow p-4 border border-amber-200 space-y-2 hidden">
+        <h3 class="text-xs font-bold text-amber-800">📢 Admin Broadcast (User အားလုံးထံ စာတိုပို့ရန်)</h3>
+        <form id="broadcastForm" class="flex gap-2">
+          <input type="text" id="broadcastInput" placeholder="အသိပေးစာတို ရေးပါ..." class="flex-1 border p-1.5 rounded text-xs outline-none">
+          <button type="submit" class="bg-amber-600 text-white text-xs px-3 py-1.5 rounded font-bold">ထုတ်ပြန်မည်</button>
+        </form>
+      </div>
+
       <div class="bg-white rounded-xl shadow p-4 border space-y-3">
         <h2 class="text-base font-bold text-slate-800 border-b pb-2">⚙️ TikTok Style ပို့စ်အသစ် တင်ရန်</h2>
         
@@ -251,14 +292,19 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Enable Offline Persistence for High Speed Loading
     db.enablePersistence().catch(err => console.log("Persistence error:", err));
 
     let currentUser = null;
     let currentUserCustomPhoto = ""; 
+    let currentUsername = "";
+    let isUserAdmin = false;
     let allAdsCache = [];
     let currentSearchQuery = "";
     let activeTag = "all";
+
+    let activeDmTargetUid = null;
+    let activeDmConversationId = null;
+    let dmUnsubscribe = null;
 
     function showToast(msg) {
       const toast = document.getElementById('toast');
@@ -269,7 +315,6 @@
       }, 3000);
     }
 
-    // High Performance Image Compressor (400px Max, Low Quality for Ultra Fast Speed)
     function imageToBase64Compressed(file, maxWidth = 400, quality = 0.35) {
       return new Promise((resolve, reject) => {
         if (!file || !file.type.startsWith('image/')) return resolve(null);
@@ -342,7 +387,16 @@
     googleLoginBtn.addEventListener('click', async () => {
       const provider = new firebase.auth.GoogleAuthProvider();
       try {
-        await auth.signInWithPopup(provider);
+        const res = await auth.signInWithPopup(provider);
+        const u = res.user;
+        const uDoc = await db.collection("users").doc(u.uid).get();
+        if (!uDoc.exists) {
+          await db.collection("users").doc(u.uid).set({
+            username: u.email.split('@')[0],
+            role: "user",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        }
         authModal.classList.add('hidden');
         showToast("Google Account ဖြင့် ဝင်ရောက်ပါပြီ");
       } catch (err) {
@@ -367,10 +421,17 @@
     emailSignUpBtn.addEventListener('click', async () => {
       const email = document.getElementById('emailInput').value.trim();
       const password = document.getElementById('passwordInput').value.trim();
+      const username = document.getElementById('usernameInput').value.trim() || email.split('@')[0];
       if (!email || !password) return showAuthStatus("Email နှင့် Password ဖြည့်ပါ", true);
 
       try {
-        await auth.createUserWithEmailAndPassword(email, password);
+        const res = await auth.createUserWithEmailAndPassword(email, password);
+        await db.collection("users").doc(res.user.uid).set({
+          username: username,
+          role: "user",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
         showAuthStatus("အကောင့်အောင်မြင်စွာ ဖွင့်ပြီးပါပြီ!");
         showToast("အကောင့်သစ် ဖွင့်လှစ်ခြင်း အောင်မြင်သည်");
         setTimeout(() => authModal.classList.add('hidden'), 1000);
@@ -420,21 +481,35 @@
         
         try {
           const userDoc = await db.collection("users").doc(user.uid).get();
-          if (userDoc.exists && userDoc.data().photoURL) {
-            currentUserCustomPhoto = userDoc.data().photoURL;
+          if (userDoc.exists) {
+            const d = userDoc.data();
+            currentUserCustomPhoto = d.photoURL || user.photoURL || 'https://via.placeholder.com/40';
+            currentUsername = d.username || user.email.split('@')[0];
+            isUserAdmin = d.role === "admin";
           } else {
             currentUserCustomPhoto = user.photoURL || 'https://via.placeholder.com/40';
+            currentUsername = user.email.split('@')[0];
+            isUserAdmin = false;
           }
         } catch(e) {
           currentUserCustomPhoto = user.photoURL || 'https://via.placeholder.com/40';
+          currentUsername = user.email.split('@')[0];
+          isUserAdmin = false;
         }
 
         userImg.src = currentUserCustomPhoto;
-        userImg.title = user.displayName || user.email;
+        userImg.title = `${currentUsername} (${user.email})`;
         loginWarning.classList.add('hidden');
         uploadBtn.disabled = false;
         uploadBtn.className = "w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg text-sm hover:bg-blue-700 transition cursor-pointer";
         uploadBtn.innerText = "တင်မည်";
+
+        if (isUserAdmin) {
+          document.getElementById('adminPanelBox').classList.remove('hidden');
+        } else {
+          document.getElementById('adminPanelBox').classList.add('hidden');
+        }
+
       } else {
         openAuthModalBtn.classList.remove('hidden');
         userInfo.classList.add('hidden');
@@ -443,6 +518,9 @@
         uploadBtn.className = "w-full bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm cursor-not-allowed";
         uploadBtn.innerText = "တင်မည် (Login ဝင်ပါ)";
         currentUserCustomPhoto = "";
+        currentUsername = "";
+        isUserAdmin = false;
+        document.getElementById('adminPanelBox').classList.add('hidden');
       }
       renderAdsData(allAdsCache);
     });
@@ -539,9 +617,10 @@
           category: cat,
           subCategory: subCat,
           authorUid: currentUser.uid,
-          authorName: currentUser.displayName || currentUser.email.split('@')[0],
+          authorName: currentUsername || currentUser.displayName || currentUser.email.split('@')[0],
           authorEmail: currentUser.email,
           authorPhoto: currentUserCustomPhoto || "",
+          status: "active", // active, hidden
           likes: [],
           comments: [],
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -567,7 +646,7 @@
 
     async function deletePost(id, authorUid) {
       if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
-      if (currentUser.uid !== authorUid) return showToast("မိမိတင်ထားသော ပို့စ်များကိုသာ ဖျက်ပိုင်ခွင့်ရှိပါသည်။");
+      if (currentUser.uid !== authorUid && !isUserAdmin) return showToast("မိမိတင်ထားသော ပို့စ်များကိုသာ ဖျက်ပိုင်ခွင့်ရှိပါသည်။");
 
       if (confirm("ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?")) {
         try {
@@ -578,6 +657,54 @@
         }
       }
     }
+
+    // Admin Hide Post Feature
+    async function adminHidePost(id) {
+      if (!isUserAdmin) return showToast("Admin သာလျှင် စံနှုန်းမညီသော ပို့စ်များကို ဖျောက်ခွင့်ရှိသည်။");
+      const reason = prompt("စံနှုန်းနှင့် မညီညွတ်သော အကြောင်းအရင်း ရေးပါ:", "ကျွန်ုပ်တို့၏ လူမှုစံနှုန်းများနှင့် မညီညွတ်ပါ");
+      if (!reason) return;
+
+      try {
+        await db.collection("ads").doc(id).update({
+          status: "hidden",
+          hideReason: reason
+        });
+        showToast("ပို့စ်အား အများမြင်ကွင်းမှ ဖျောက်လိုက်ပါပြီ!");
+      } catch (err) {
+        showToast("အမှားရှိပါသည်: " + err.message);
+      }
+    }
+
+    // Open Appeal Modal
+    function openAppealModal(postId) {
+      document.getElementById('appealPostId').value = postId;
+      document.getElementById('appealReason').value = "";
+      document.getElementById('appealModal').classList.remove('hidden');
+    }
+
+    document.getElementById('closeAppealModalBtn').addEventListener('click', () => {
+      document.getElementById('appealModal').classList.add('hidden');
+    });
+
+    document.getElementById('submitAppealBtn').addEventListener('click', async () => {
+      const postId = document.getElementById('appealPostId').value;
+      const reason = document.getElementById('appealReason').value.trim();
+      if (!reason) return showToast("အယူခံဝင်လိုသည့် အကြောင်းအရင်း ရေးပါ။");
+
+      try {
+        await db.collection("appeals").add({
+          postId: postId,
+          userUid: currentUser.uid,
+          userName: currentUsername,
+          reason: reason,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        document.getElementById('appealModal').classList.add('hidden');
+        showToast("အယူခံလွှာအား Admin ထံ ပေးပို့လိုက်ပါပြီ!");
+      } catch(err) {
+        showToast("အမှားရှိပါသည်: " + err.message);
+      }
+    });
 
     async function toggleLike(postId, likesArray) {
       if (!currentUser) return showToast("Like ပေးရန် အကောင့်ဝင်ပါ!");
@@ -599,7 +726,8 @@
       if (!text) return;
 
       const commentObj = {
-        userName: currentUser.displayName || currentUser.email.split('@')[0],
+        userUid: currentUser.uid,
+        userName: currentUsername || currentUser.displayName || currentUser.email.split('@')[0],
         userPhoto: currentUserCustomPhoto || "",
         text: text,
         createdAt: new Date().toISOString()
@@ -620,7 +748,88 @@
       }
     }
 
-    // High Speed Fetch Optimization (Limit 20 posts to reduce bandwidth consumption)
+    // Direct Messenger Implementation
+    function openDirectChat(targetUid, targetName) {
+      if (!currentUser) return showToast("စာတိုပို့ရန် Login အရင်ဝင်ပါ!");
+      if (currentUser.uid === targetUid) return showToast("မိမိကိုယ်တိုင် စာပို့၍ မရပါ။");
+
+      activeDmTargetUid = targetUid;
+      document.getElementById('dmTargetName').innerText = `💬 @${targetName} နှင့် စကားပြောရန်`;
+      document.getElementById('directChatModal').classList.remove('hidden');
+
+      const convId = currentUser.uid < targetUid ? `${currentUser.uid}_${targetUid}` : `${targetUid}_${currentUser.uid}`;
+      activeDmConversationId = convId;
+
+      if (dmUnsubscribe) dmUnsubscribe();
+
+      dmUnsubscribe = db.collection("conversations").doc(convId).collection("messages")
+        .orderBy("createdAt", "asc").limit(30)
+        .onSnapshot(snapshot => {
+          let html = "";
+          snapshot.forEach(doc => {
+            const m = doc.data();
+            const isMe = m.senderUid === currentUser.uid;
+            html += `
+              <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                <div class="p-2 rounded-xl text-xs max-w-[80%] ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border text-slate-800 rounded-tl-none'}">
+                  ${m.text}
+                </div>
+              </div>
+            `;
+          });
+          const dmBox = document.getElementById('dmBox');
+          dmBox.innerHTML = html || '<p class="text-center text-slate-400">စာတိုမရှိသေးပါ...</p>';
+          dmBox.scrollTop = dmBox.scrollHeight;
+        });
+    }
+
+    document.getElementById('closeDirectChatBtn').addEventListener('click', () => {
+      document.getElementById('directChatModal').classList.add('hidden');
+      if (dmUnsubscribe) dmUnsubscribe();
+    });
+
+    document.getElementById('dmForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('dmInput');
+      const text = input.value.trim();
+      if (!text || !activeDmConversationId) return;
+
+      try {
+        await db.collection("conversations").doc(activeDmConversationId).collection("messages").add({
+          senderUid: currentUser.uid,
+          senderName: currentUsername,
+          text: text,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        input.value = "";
+      } catch(err) {
+        showToast("စာပို့ရာတွင် အမှားရှိပါသည်: " + err.message);
+      }
+    });
+
+    // Admin Broadcast System
+    document.getElementById('broadcastForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!isUserAdmin) return;
+      const text = document.getElementById('broadcastInput').value.trim();
+      if (!text) return;
+
+      try {
+        await db.collection("chats").add({
+          text: "📢 [ADMIN အသိပေးချက်] " + text,
+          sender: "ADMIN",
+          senderPhoto: "https://via.placeholder.com/40/2563eb/ffffff?text=A",
+          senderUid: "admin_system",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        document.getElementById('broadcastInput').value = "";
+        showToast("အသိပေးစာတို ထုတ်ပြန်လိုက်ပါပြီ!");
+      } catch(err) {
+        showToast("အမှားရှိပါသည်: " + err.message);
+      }
+    });
+
+    // High Speed Fetch Optimization
     db.collection("ads").orderBy("createdAt", "desc").limit(20).onSnapshot((snapshot) => {
       allAdsCache = [];
       snapshot.forEach(doc => {
@@ -646,7 +855,14 @@
         const likes = data.likes || [];
         const comments = data.comments || [];
         const isLiked = currentUser && likes.includes(currentUser.uid);
+        const isOwner = currentUser && (currentUser.uid === data.authorUid);
 
+        // Filter Out Hidden Posts except for Post Owner or Admin
+        if (data.status === "hidden" && !isOwner && !isUserAdmin) {
+          return;
+        }
+
+        
         let mediaTag = "";
 
         if (data.imageUrl) {
@@ -703,15 +919,28 @@
           }
         }
 
-        const authorPhoto = data.authorPhoto ? `<img src="${data.authorPhoto}" class="w-6 h-6 rounded-full object-cover" loading="lazy">` : '<div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px]">👤</div>';
-        const canDelete = currentUser && (currentUser.uid === data.authorUid);
+        const authorPhoto = data.authorPhoto ? `<img src="${data.authorPhoto}" onclick="openDirectChat('${data.authorUid}', '${data.authorName}')" class="w-6 h-6 rounded-full object-cover cursor-pointer" loading="lazy" title="Private Msg ပို့ရန် နှိပ်ပါ">` : `<div onclick="openDirectChat('${data.authorUid}', '${data.authorName}')" class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] cursor-pointer" title="Private Msg ပို့ရန် နှိပ်ပါ">👤</div>`;
+        
+        const canDelete = currentUser && (currentUser.uid === data.authorUid || isUserAdmin);
 
         let commentsList = comments.slice(-2).map(c => `
           <div class="text-[11px] bg-slate-100 p-1.5 rounded flex items-start gap-1.5">
-            <img src="${c.userPhoto || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full mt-0.5 object-cover" loading="lazy">
-            <div><span class="font-bold text-slate-700">${c.userName}:</span> ${c.text}</div>
+            <img src="${c.userPhoto || 'https://via.placeholder.com/20'}" onclick="openDirectChat('${c.userUid}', '${c.userName}')" class="w-4 h-4 rounded-full mt-0.5 object-cover cursor-pointer" loading="lazy" title="Private Msg ပို့ရန်">
+            <div><span class="font-bold text-slate-700">@${c.userName}:</span> ${c.text}</div>
           </div>
         `).join('');
+
+        // Hidden Post Warning Notice UI
+        let hiddenNotice = "";
+        if (data.status === "hidden") {
+          hiddenNotice = `
+            <div class="bg-rose-50 border border-rose-200 p-2.5 rounded-lg text-xs text-rose-700 space-y-1">
+              <p class="font-bold">⚠️ ကျွန်ုပ်တို့၏ လူမှုစံနှုန်းများနှင့် မညီညွတ်သောကြောင့် ဤပို့စ်အား အများမြင်ကွင်းမှ ဖျောက်ထားပါသည်။</p>
+              <p class="text-[10px] text-rose-500">အကြောင်းအရင်း: ${data.hideReason || "စံနှုန်းမညီပါ"}</p>
+              <button onclick="openAppealModal('${data.id}')" class="bg-rose-600 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-rose-700 transition">အယူခံဝင်မည်</button>
+            </div>
+          `;
+        }
 
         const card = `
           <div class="bg-white border rounded-xl p-3 shadow-sm space-y-2">
@@ -719,12 +948,20 @@
               <div class="flex items-center gap-2">
                 ${authorPhoto}
                 <div>
-                  <h4 class="font-bold text-slate-800 text-xs">${data.authorName || 'Unknown'}</h4>
+                  <h4 class="font-bold text-slate-800 text-xs flex items-center gap-1">
+                    @${data.authorName || 'unknown'}
+                    <button onclick="openDirectChat('${data.authorUid}', '${data.authorName}')" class="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-normal">💬 စာပို့</button>
+                  </h4>
                   <span class="text-[10px] text-slate-400">${data.subCategory ? '#' + data.subCategory : ''}</span>
                 </div>
               </div>
-              ${canDelete ? `<button onclick="deletePost('${data.id}', '${data.authorUid}')" class="text-xs text-rose-500 font-semibold hover:underline">🗑️ ဖျက်မည်</button>` : ''}
+              <div class="flex items-center gap-1">
+                ${isUserAdmin && data.status !== "hidden" ? `<button onclick="adminHidePost('${data.id}')" class="text-xs text-amber-600 font-semibold hover:underline">⚠️ ဖျောက်မည်</button>` : ''}
+                ${canDelete ? `<button onclick="deletePost('${data.id}', '${data.authorUid}')" class="text-xs text-rose-500 font-semibold hover:underline">🗑️ ဖျက်မည်</button>` : ''}
+              </div>
             </div>
+
+            ${hiddenNotice}
 
             <h3 class="font-bold text-slate-900 text-sm">${data.title}</h3>
             ${data.description ? `<p class="text-slate-600 text-xs leading-relaxed">${data.description}</p>` : ''}
@@ -756,19 +993,19 @@
 
       document.getElementById('feedAds').innerHTML = feedHtml || '<p class="text-center text-slate-400 py-8 text-xs">သတင်းများ မရှိသေးပါ</p>';
       document.getElementById('reelsAds').innerHTML = reelsHtml || '<p class="text-center text-slate-400 py-8 text-xs">Reels မရှိသေးပါ</p>';
-      document.getElementById('paidAds').innerHTML = paidHtml || '<p class="text-center text-slate-400 py-8 text-xs">VIP ကြော်ငြာ မရှိသေးပါ</p>';
+      document.getElementById('paidAds').innerHTML me = paidHtml || '<p class="text-center text-slate-400 py-8 text-xs">VIP ကြော်ငြာ မရှိသေးပါ</p>';
 
       if (window.tiktokEmbed) window.tiktokEmbed.load();
     }
 
-    // Chat System with Limit (Last 30 messages to optimize performance)
+    // Live Chat System
     document.getElementById('chatForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const input = document.getElementById('chatInput');
       const text = input.value.trim();
       if (!text) return;
 
-      const senderName = currentUser ? (currentUser.displayName || currentUser.email.split('@')[0]) : "ဧည့်သည်";
+      const senderName = currentUser ? (currentUsername || currentUser.displayName || currentUser.email.split('@')[0]) : "ဧည့်သည်";
       const senderPhoto = currentUser ? currentUserCustomPhoto : "";
       const senderUid = currentUser ? currentUser.uid : "guest";
 
@@ -795,7 +1032,7 @@
       let html = "";
       messages.forEach(c => {
         const isMe = currentUser && (currentUser.uid === c.senderUid);
-        const photo = c.senderPhoto ? `<img src="${c.senderPhoto}" class="w-5 h-5 rounded-full inline object-cover" loading="lazy">` : '';
+        const photo = c.senderPhoto ? `<img src="${c.senderPhoto}" onclick="openDirectChat('${c.senderUid}', '${c.sender}')" class="w-5 h-5 rounded-full inline object-cover cursor-pointer" loading="lazy" title="Private Msg ပို့ရန်">` : '';
         
         let timeStr = "";
         if (c.createdAt && c.createdAt.toDate) {
@@ -807,7 +1044,7 @@
           <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
             <div class="flex items-center gap-1 text-[10px] text-slate-400 mb-0.5">
               ${!isMe ? photo : ''}
-              <span class="font-bold text-slate-600">${c.sender || 'Guest'}</span>
+              <span class="font-bold text-slate-600 cursor-pointer" onclick="openDirectChat('${c.senderUid}', '${c.sender}')">@${c.sender || 'Guest'}</span>
               ${isMe ? photo : ''}
               <span class="text-[9px] text-slate-400 ml-1">${timeStr}</span>
             </div>
