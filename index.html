@@ -338,13 +338,11 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-    const ADMIN_PASSCODE = "478478";
-    
 
     db.enablePersistence().catch(err => console.log("Persistence error:", err));
 
-    // Security Settings: Admin Passcode / Password
-    const ADMIN_PASSCODE = "admin1234"; // သင့်စိတ်ကြိုက် Secret Admin Password ပြောင်းလဲနိုင်ပါသည်။
+    // Security Settings: Admin Passcode (ဆရာတောင်းဆိုထားသော 478478 သတ်မှတ်ထားပါသည်)
+    const ADMIN_PASSCODE = "478478"; 
     const ADMIN_EMAILS = ["admin@kyawngar.com", "kyawngarpro@gmail.com"];
 
     let currentUser = null;
@@ -748,7 +746,7 @@
           showToast("ဖျက်ရာတွင် အမှားရှိပါသည်: " + err.message);
         }
       }
-  }
+    }
     // Edit Post Modal Trigger
     function openEditPostModal(id, title, desc) {
       document.getElementById('editPostId').value = id;
