@@ -46,15 +46,16 @@
       </button>
 
       <div id="userInfo" class="hidden flex items-center gap-2">
-        <div class="relative group cursor-pointer" id="changeProfileBtn" title="Profile ဓာတ်ပုံပြောင်းရန် နှိပ်ပါ">
+        <!-- Hidden Secret Admin Click Area (Profile Picture 5-Clicks) -->
+        <div class="relative cursor-pointer" id="secretAdminTrigger" title="Profile ဓာတ်ပုံ">
           <img id="userImg" class="w-8 h-8 rounded-full border-2 border-white shadow object-cover">
-          <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[9px] text-white">📷</div>
         </div>
+        
         <div class="flex flex-col text-left">
           <span id="userNameLabel" class="text-xs font-bold leading-tight"></span>
-          <span id="adminBadge" class="text-[9px] bg-amber-400 text-slate-900 font-extrabold px-1 rounded hidden w-max cursor-pointer" title="Admin Auth">ADMIN</span>
+          <span id="adminBadge" class="text-[9px] bg-amber-400 text-slate-900 font-extrabold px-1 rounded hidden w-max" title="Admin Active">ADMIN</span>
         </div>
-        <button id="adminLoginBtn" class="bg-amber-500 text-slate-900 text-[10px] font-bold px-2 py-1 rounded hover:bg-amber-400 transition ml-1">Admin Access</button>
+        
         <button id="logoutBtn" class="bg-rose-500 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-rose-600 transition ml-1">ထွက်မည်</button>
       </div>
     </div>
@@ -217,14 +218,14 @@
           </div>
           <form id="chatForm" class="flex gap-2 pt-2 border-t">
             <input type="text" id="chatInput" placeholder="စကားပြောရန် စာရိုက်ပါ..." required class="flex-1 border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">ပို့မည်</button>
+            <button type="submit" id="chatSubmitBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">ပို့မည်</button>
           </form>
         </div>
 
       </div>
     </div>
 
-    <!-- Tab 5: Create Post (Available to Logged in Users) -->
+    <!-- Tab 5: Create Post -->
     <div id="tab-admin" class="tab-content space-y-4 hidden">
       <div class="bg-white rounded-xl shadow p-4 border space-y-3">
         <h2 class="text-base font-bold text-slate-800 border-b pb-2">⚙️ ပို့စ်အသစ် တင်ရန်</h2>
@@ -411,15 +412,28 @@
       });
     }
 
+    // Secret Admin Mode Trigger (Profile Image 5-Clicks)
+    let profileClickCount = 0;
+    let profileClickTimer = null;
+    const secretAdminTrigger = document.getElementById('secretAdminTrigger');
     const adminModal = document.getElementById('adminModal');
-    const adminLoginBtn = document.getElementById('adminLoginBtn');
     const closeAdminModalBtn = document.getElementById('closeAdminModalBtn');
     const submitAdminPasscodeBtn = document.getElementById('submitAdminPasscodeBtn');
     const adminPasscodeInput = document.getElementById('adminPasscodeInput');
 
-    adminLoginBtn.addEventListener('click', () => {
-      adminPasscodeInput.value = "";
-      adminModal.classList.remove('hidden');
+    secretAdminTrigger.addEventListener('click', () => {
+      profileClickCount++;
+      clearTimeout(profileClickTimer);
+
+      profileClickTimer = setTimeout(() => {
+        profileClickCount = 0;
+      }, 2000);
+
+      if (profileClickCount >= 5) {
+        profileClickCount = 0;
+        adminPasscodeInput.value = "";
+        adminModal.classList.remove('hidden');
+      }
     });
 
     closeAdminModalBtn.addEventListener('click', () => adminModal.classList.add('hidden'));
@@ -525,36 +539,13 @@
       showToast("အကောင့်မှ ထွက်လိုက်ပါပြီ");
     });
 
-    const changeProfileBtn = document.getElementById('changeProfileBtn');
     const profileFileInput = document.getElementById('profileFileInput');
-
-    changeProfileBtn.addEventListener('click', () => profileFileInput.click());
-
-    profileFileInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file || !currentUser) return;
-
-      showToast("Profile ပြင်ဆင်နေပါသည်...");
-
-      try {
-        const base64Photo = await imageToBase64Compressed(file, 120, 0.3);
-        
-        await db.collection("users").doc(currentUser.uid).set({
-          photoURL: base64Photo,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-
-        currentUserCustomPhoto = base64Photo;
-        userImg.src = base64Photo;
-        showToast("Profile ဓာတ်ပုံ အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ!");
-        renderAdsData(allAdsCache);
-      } catch (err) {
-        showToast("ဓာတ်ပုံ တင်ရာတွင် အမှားရှိပါသည်: " + err.message);
-      }
-    });
 
     auth.onAuthStateChanged(async (user) => {
       currentUser = user;
+      const chatInput = document.getElementById('chatInput');
+      const chatSubmitBtn = document.getElementById('chatSubmitBtn');
+
       if (user) {
         openAuthModalBtn.classList.add('hidden');
         userInfo.classList.remove('hidden');
@@ -564,8 +555,9 @@
           adminBadge.classList.remove('hidden');
         } else {
           adminBadge.classList.add('hidden');
-  }
-  try {
+        }
+
+        try {
           const userDoc = await db.collection("users").doc(user.uid).get();
           if (userDoc.exists) {
             const data = userDoc.data();
@@ -587,6 +579,14 @@
         uploadBtn.disabled = false;
         uploadBtn.className = "w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg text-sm hover:bg-blue-700 transition cursor-pointer";
         uploadBtn.innerText = "တင်မည်";
+
+        // Enable Chat Input
+        if (chatInput) {
+          chatInput.disabled = false;
+          chatInput.placeholder = "စကားပြောရန် စာရိုက်ပါ...";
+        }
+        if (chatSubmitBtn) chatSubmitBtn.disabled = false;
+
       } else {
         openAuthModalBtn.classList.remove('hidden');
         userInfo.classList.add('hidden');
@@ -597,6 +597,13 @@
         currentUserCustomPhoto = "";
         currentUserName = "";
         isAdmin = false;
+
+        // Disable Chat Input when Not Logged In
+        if (chatInput) {
+          chatInput.disabled = true;
+          chatInput.placeholder = "🔒 စကားပြောရန် Login အရင်ဝင်ပါ...";
+        }
+        if (chatSubmitBtn) chatSubmitBtn.disabled = true;
       }
       renderAdsData(allAdsCache);
     });
@@ -718,19 +725,11 @@
         uploadBtn.disabled = false;
       }
     });
-
     async function deletePost(id, authorUid) {
       if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
 
       if (!isAdmin && currentUser.uid !== authorUid) {
         return showToast("မိမိတင်ထားသော ပို့စ်များကိုသာ ဖျက်ပိုင်ခွင့်ရှိပါသည်။");
-      }
-
-      if (isAdmin && currentUser.uid !== authorUid) {
-        const pass = prompt("Admin Security: ပို့စ်ဖျက်ရန် Admin Password ရိုက်ထည့်ပါ -");
-        if (pass !== ADMIN_PASSCODE) {
-          return showToast("❌ Password မှားယွင်းသောကြောင့် ဖျက်ခွင့်မရှိပါ");
-        }
       }
 
       if (confirm(isAdmin ? "Admin အဖြစ် ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?" : "ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?")) {
@@ -963,13 +962,15 @@
       if (window.tiktokEmbed) window.tiktokEmbed.load();
     }
 
-    // Public Chat စာဖျက်ရန် Function (Admin / Sender သာဖျက်နိုင်မည်)
+    // Public Chat စာဖျက်ရန် Function (Admin က အကုန်ဖျက်နိုင်မည်)
     async function deleteChatMessage(chatId, senderUid) {
       if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
 
       const isOwner = currentUser.uid === senderUid;
+      
+      // Admin ဖြစ်ပါက သို့မဟုတ် မိမိစာဖြစ်ပါက ဖျက်ခွင့်ပေးမည်
       if (!isAdmin && !isOwner) {
-        return showToast("မိမိစာများကိုသာ ဖျက်နိုင်ပါမည်။");
+        return showToast("Admin မဟုတ်ပါက မိမိစာများကိုသာ ဖျက်နိုင်ပါမည်။");
       }
 
       if (confirm("ဒီ Chat စာသားကို ဖျက်ရန် သေချာပါသလား?")) {
@@ -980,30 +981,29 @@
           showToast("ဖျက်ရာတွင် အမှားရှိပါသည်: " + err.message);
         }
       }
-  }
+    }
+
     document.getElementById('chatForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (!currentUser) return showToast("စကားပြောရန် အကောင့်အရင်ဝင်ပေးပါ!");
+
       const input = document.getElementById('chatInput');
       let text = input.value.trim();
       if (!text) return;
 
-      // စာသား Auto Filter (မဖွယ်မရာစာသားများ Filter ပြုလုပ်ခြင်း)
+      // စာသား Auto Filter
       const badWords = ["fuck", "shit", "bitch"];
       badWords.forEach(word => {
         const regex = new RegExp(word, "gi");
         text = text.replace(regex, "***");
       });
 
-      const senderName = currentUser ? currentUserName : "ဧည့်သည်";
-      const senderPhoto = currentUser ? currentUserCustomPhoto : "";
-      const senderUid = currentUser ? currentUser.uid : "guest";
-
       try {
         await db.collection("chats").add({
           text: text,
-          sender: senderName,
-          senderPhoto: senderPhoto,
-          senderUid: senderUid,
+          sender: currentUserName,
+          senderPhoto: currentUserCustomPhoto || "",
+          senderUid: currentUser.uid,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         input.value = "";
@@ -1019,6 +1019,7 @@
       let html = "";
       messages.forEach(c => {
         const isMe = currentUser && (currentUser.uid === c.senderUid);
+        // Admin Mode ဖွင့်ထားပါက အားလုံးသော စာသားများတွင် Trash Icon ပေါ်မည်
         const canDeleteChat = isAdmin || isMe;
 
         const photo = c.senderPhoto 
@@ -1038,7 +1039,7 @@
               <span class="font-bold text-slate-600 cursor-pointer" onclick="openPrivateChat('${c.senderUid}', '${c.sender}', '${c.senderPhoto}')">${c.sender || 'Guest'}</span>
               ${isMe ? photo : ''}
               <span class="text-[9px] text-slate-400 ml-1">${timeStr}</span>
-              ${canDeleteChat ? `<button onclick="deleteChatMessage('${c.id}', '${c.senderUid}')" class="text-rose-500 font-bold ml-1 hover:underline">🗑️</button>` : ''}
+              ${canDeleteChat ? `<button onclick="deleteChatMessage('${c.id}', '${c.senderUid}')" class="text-rose-500 font-bold ml-1 hover:underline cursor-pointer" title="ဖျက်မည်">🗑️</button>` : ''}
             </div>
             <div class="p-2 rounded-xl text-xs max-w-[80%] relative ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border text-slate-800 rounded-tl-none'}">
               ${c.text}
@@ -1155,8 +1156,7 @@
         showToast("စာပို့ရာတွင် အမှားရှိပါသည်: " + err.message);
       }
     });
-
-    function loadPrivateChatList() {
+  function loadPrivateChatList() {
       if (!currentUser) return;
 
       db.collection("users").doc(currentUser.uid).collection("threads").orderBy("updatedAt", "desc").onSnapshot(async (snapshot) => {
