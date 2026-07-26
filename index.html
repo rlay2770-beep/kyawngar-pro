@@ -338,6 +338,8 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+    const ADMIN_PASSCODE = "478478";
+    
 
     db.enablePersistence().catch(err => console.log("Persistence error:", err));
 
