@@ -564,9 +564,8 @@
           adminBadge.classList.remove('hidden');
         } else {
           adminBadge.classList.add('hidden');
-        }
-
-        try {
+  }
+  try {
           const userDoc = await db.collection("users").doc(user.uid).get();
           if (userDoc.exists) {
             const data = userDoc.data();
@@ -601,6 +600,7 @@
       }
       renderAdsData(allAdsCache);
     });
+
     const navButtons = document.querySelectorAll('.nav-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
@@ -963,11 +963,36 @@
       if (window.tiktokEmbed) window.tiktokEmbed.load();
     }
 
+    // Public Chat စာဖျက်ရန် Function (Admin / Sender သာဖျက်နိုင်မည်)
+    async function deleteChatMessage(chatId, senderUid) {
+      if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
+
+      const isOwner = currentUser.uid === senderUid;
+      if (!isAdmin && !isOwner) {
+        return showToast("မိမိစာများကိုသာ ဖျက်နိုင်ပါမည်။");
+      }
+
+      if (confirm("ဒီ Chat စာသားကို ဖျက်ရန် သေချာပါသလား?")) {
+        try {
+          await db.collection("chats").doc(chatId).delete();
+          showToast("Chat စာသားကို ဖျက်ပြီးပါပြီ");
+        } catch (err) {
+          showToast("ဖျက်ရာတွင် အမှားရှိပါသည်: " + err.message);
+        }
+      }
+  }
     document.getElementById('chatForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const input = document.getElementById('chatInput');
-      const text = input.value.trim();
+      let text = input.value.trim();
       if (!text) return;
+
+      // စာသား Auto Filter (မဖွယ်မရာစာသားများ Filter ပြုလုပ်ခြင်း)
+      const badWords = ["fuck", "shit", "bitch"];
+      badWords.forEach(word => {
+        const regex = new RegExp(word, "gi");
+        text = text.replace(regex, "***");
+      });
 
       const senderName = currentUser ? currentUserName : "ဧည့်သည်";
       const senderPhoto = currentUser ? currentUserCustomPhoto : "";
@@ -987,13 +1012,15 @@
       }
     });
 
-    db.collection("chats").orderBy("createdAt", "desc").limit(25).onSnapshot((snapshot) => {
+    db.collection("chats").orderBy("createdAt", "desc").limit(30).onSnapshot((snapshot) => {
       let messages = [];
-      snapshot.forEach(doc => messages.unshift(doc.data()));
+      snapshot.forEach(doc => messages.unshift({ id: doc.id, ...doc.data() }));
 
       let html = "";
       messages.forEach(c => {
         const isMe = currentUser && (currentUser.uid === c.senderUid);
+        const canDeleteChat = isAdmin || isMe;
+
         const photo = c.senderPhoto 
           ? `<img src="${c.senderPhoto}" onclick="openPrivateChat('${c.senderUid}', '${c.sender}', '${c.senderPhoto}')" class="w-5 h-5 rounded-full inline object-cover cursor-pointer">` 
           : '';
@@ -1005,14 +1032,15 @@
         }
 
         html += `
-          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} group">
             <div class="flex items-center gap-1 text-[10px] text-slate-400 mb-0.5">
               ${!isMe ? photo : ''}
               <span class="font-bold text-slate-600 cursor-pointer" onclick="openPrivateChat('${c.senderUid}', '${c.sender}', '${c.senderPhoto}')">${c.sender || 'Guest'}</span>
               ${isMe ? photo : ''}
               <span class="text-[9px] text-slate-400 ml-1">${timeStr}</span>
+              ${canDeleteChat ? `<button onclick="deleteChatMessage('${c.id}', '${c.senderUid}')" class="text-rose-500 font-bold ml-1 hover:underline">🗑️</button>` : ''}
             </div>
-            <div class="p-2 rounded-xl text-xs max-w-[80%] ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border text-slate-800 rounded-tl-none'}">
+            <div class="p-2 rounded-xl text-xs max-w-[80%] relative ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border text-slate-800 rounded-tl-none'}">
               ${c.text}
             </div>
           </div>
