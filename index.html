@@ -3,200 +3,593 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Social Media App</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <title>KyawNgar Pro</title>
+  
+  <meta name="theme-color" content="#2563eb">
+  <meta name="description" content="KyawNgar Pro - News, Reels, Ads and Private Messenger">
+  
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script async src="https://www.tiktok.com/embed.js"></script>
+
   <style>
-    @keyframes spin-disc { 100% { transform: rotate(360deg); } }
-    .animate-spin-disc { animation: spin-disc 4s linear infinite; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-disc {
+      animation: spin-slow 5s linear infinite;
+    }
   </style>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800 pb-20">
+<body class="bg-slate-100 min-h-screen flex flex-col font-sans pb-20 select-none">
+
+  <!-- Toast Notification Box -->
+  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white text-xs px-4 py-2.5 rounded-full shadow-lg transition-all duration-300 opacity-0 pointer-events-none flex items-center gap-2">
+    <span id="toastMsg"></span>
+  </div>
 
   <!-- Header -->
-  <header class="bg-white border-b sticky top-0 z-30 px-4 py-3 shadow-sm flex justify-between items-center">
-    <h1 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-      <span>🌐</span> App Community
-    </h1>
-    <div id="userProfileArea" class="flex items-center gap-2">
-      <button onclick="loginWithGoogle()" class="bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg font-medium">
-        🔑 Google Login
+  <header class="bg-blue-600 text-white p-3.5 shadow-md flex justify-between items-center sticky top-0 z-50">
+    <h1 class="text-lg font-bold flex items-center gap-1.5">🚀 KyawNgar Pro</h1>
+    
+    <!-- Auth Container -->
+    <div id="authContainer" class="flex items-center gap-1.5">
+      <button id="openAuthModalBtn" class="bg-white text-blue-600 text-xs font-bold px-3 py-1.5 rounded-lg shadow flex items-center gap-1.5 hover:bg-slate-100 transition">
+        <span>🔐 Login / Register</span>
       </button>
+
+      <div id="userInfo" class="hidden flex items-center gap-2">
+        <div class="relative group cursor-pointer" id="changeProfileBtn" title="Profile ဓာတ်ပုံပြောင်းရန် နှိပ်ပါ">
+          <img id="userImg" class="w-8 h-8 rounded-full border-2 border-white shadow object-cover">
+          <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[9px] text-white">📷</div>
+        </div>
+        <div class="flex flex-col text-left">
+          <span id="userNameLabel" class="text-xs font-bold leading-tight"></span>
+          <span id="adminBadge" class="text-[9px] bg-amber-400 text-slate-900 font-extrabold px-1 rounded hidden w-max">ADMIN</span>
+        </div>
+        <button id="logoutBtn" class="bg-rose-500 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-rose-600 transition ml-1">ထွက်မည်</button>
+      </div>
     </div>
   </header>
 
-  <main class="max-w-md mx-auto p-4 space-y-4">
-    
-    <!-- Post Creation Box -->
-    <div class="bg-white p-4 rounded-xl border shadow-sm space-y-3">
-      <h3 class="font-bold text-sm text-slate-700">📌 ပို့စ်အသစ်တင်ရန်</h3>
-      <input type="text" id="postTitle" placeholder="ခေါင်းစဉ်" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-slate-400">
-      <textarea id="postDesc" placeholder="အသေးစိတ် ရေးရန်..." class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-slate-400 h-20"></textarea>
+  <!-- Hidden Profile Photo Input -->
+  <input type="file" id="profileFileInput" accept="image/*" class="hidden">
+
+  <!-- Login/Register Modal Popup -->
+  <div id="authModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-4 relative">
+      <button id="closeAuthModalBtn" class="absolute top-3 right-3 text-slate-400 text-lg font-bold">✕</button>
       
-      <div class="grid grid-cols-2 gap-2 text-xs">
-        <select id="postCat" class="border p-2 rounded-lg bg-white">
-          <option value="feed">Feed</option>
-          <option value="reels">Reels</option>
-          <option value="ads">VIP Ads</option>
-        </select>
-        <input type="text" id="postSubCat" placeholder="Category tag (e.g. news)" class="border p-2 rounded-lg">
-      </div>
-
-      <input type="text" id="postImage" placeholder="Image URL..." class="w-full border p-2 rounded-lg text-xs">
-      <input type="text" id="postVideo" placeholder="Video URL (YouTube / TikTok / MP4)..." class="w-full border p-2 rounded-lg text-xs">
-      <input type="text" id="postAudio" placeholder="Audio URL (MP3)..." class="w-full border p-2 rounded-lg text-xs">
-
-      <button onclick="createNewPost()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-xs transition">
-        🚀 ပို့စ်တင်မည်
+      <h3 class="text-base font-bold text-slate-800 text-center">🔐 အကောင့်ဝင်ရန် / အကောင့်သစ်ဖွင့်ရန်</h3>
+      
+      <button id="googleLoginBtn" class="w-full border border-slate-300 bg-white text-slate-700 font-semibold py-2 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-slate-50 transition shadow-sm">
+        <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+        <span>Google Account ဖြင့် ဝင်မည်</span>
       </button>
-    </div>
 
-    <!-- Search & Filter -->
-    <div class="space-y-2">
-      <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="🔍 ရှာဖွေရန်..." class="w-full border p-2 rounded-lg text-xs bg-white shadow-sm">
-      <div class="flex gap-2 overflow-x-auto py-1 text-xs no-scrollbar">
-        <button onclick="filterTag('all')" class="bg-slate-800 text-white px-3 py-1 rounded-full whitespace-nowrap">All</button>
-        <button onclick="filterTag('news')" class="bg-white border px-3 py-1 rounded-full whitespace-nowrap">News</button>
-        <button onclick="filterTag('general')" class="bg-white border px-3 py-1 rounded-full whitespace-nowrap">General</button>
+      <div class="flex items-center gap-2 my-2">
+        <div class="flex-1 border-b"></div>
+        <span class="text-[10px] text-slate-400 font-semibold">သို့မဟုတ် Email ဖြင့်</span>
+        <div class="flex-1 border-b"></div>
+      </div>
+
+      <form id="emailAuthForm" class="space-y-2.5">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-600 mb-1">အမည် (Username)</label>
+          <input type="text" id="usernameInput" placeholder="ဥပမာ - Kyaw Kyaw" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-600 mb-1">အီးမေးလ် (Email)</label>
+          <input type="email" id="emailInput" required placeholder="example@gmail.com" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-600 mb-1">စကားဝှက် (Password)</label>
+          <input type="password" id="passwordInput" required placeholder="******" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button type="button" id="emailLoginBtn" class="bg-blue-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-blue-700">Login ဝင်မည်</button>
+          <button type="button" id="emailSignUpBtn" class="bg-slate-700 text-white font-bold py-2 rounded-lg text-xs hover:bg-slate-800">အကောင့်သစ်ဖွင့်မည်</button>
+        </div>
+      </form>
+
+      <div id="authStatus" class="text-center text-[11px] hidden p-2 rounded"></div>
+    </div>
+  </div>
+
+  <!-- Search & Category Filter Bar -->
+  <div class="bg-white border-b sticky top-[57px] z-40 shadow-sm p-3 space-y-2">
+    <div class="max-w-md mx-auto flex gap-2">
+      <input type="text" id="searchInput" placeholder="ရှာဖွေရန် စာသား ရိုက်ပါ..." class="flex-1 border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+      <button id="clearSearchBtn" class="bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold">ဖျက်ရန်</button>
+    </div>
+    <div class="max-w-md mx-auto flex gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+      <button class="tag-btn bg-blue-600 text-white px-3 py-1 rounded-full font-medium" data-tag="all">အားလုံး</button>
+      <button class="tag-btn bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium" data-tag="news">📰 သတင်း</button>
+      <button class="tag-btn bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium" data-tag="job">💼 အလုပ်အကိုင်</button>
+      <button class="tag-btn bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium" data-tag="realestate">🏠 အိမ်ခြံမြေ</button>
+      <button class="tag-btn bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium" data-tag="tech">💻 နည်းပညာ</button>
+    </div>
+  </div>
+
+  <!-- Main Display Container -->
+  <main class="flex-1 max-w-md w-full mx-auto p-4 space-y-4">
+
+    <!-- Tab 1: Feed -->
+    <div id="tab-feed" class="tab-content space-y-4">
+      <div id="feedAds" class="space-y-4">
+        <p class="text-center text-slate-400 py-8 text-sm">Data များကို ခဏအတွင်း ယူနေပါသည်...</p>
       </div>
     </div>
 
-    <!-- Content Sections -->
-    <div id="feedAds" class="space-y-3"></div>
-    <div id="reelsAds" class="space-y-3"></div>
-    <div id="paidAds" class="space-y-3"></div>
+    <!-- Tab 2: Reels -->
+    <div id="tab-reels" class="tab-content space-y-4 hidden">
+      <div id="reelsAds" class="space-y-4">
+        <p class="text-center text-slate-400 py-8 text-sm">Reels ဗီဒီယိုများ မရှိသေးပါ။</p>
+      </div>
+    </div>
+
+    <!-- Tab 3: Ads -->
+    <div id="tab-ads" class="tab-content space-y-4 hidden">
+      <div id="paidAds" class="space-y-4">
+        <p class="text-center text-slate-400 py-8 text-sm">VIP ကြော်ငြာများ မရှိသေးပါ။</p>
+      </div>
+    </div>
+
+    <!-- Tab 4: Chat / Messenger -->
+    <div id="tab-chat" class="tab-content space-y-4 hidden">
+      <!-- Public Chat & Direct Message Switcher Header -->
+      <div class="bg-white p-3 rounded-xl shadow border space-y-2">
+        <div class="flex border-b pb-2">
+          <button id="showPublicChatBtn" class="flex-1 text-center font-bold text-xs py-1.5 border-b-2 border-blue-600 text-blue-600">💬 Community Chat</button>
+          <button id="showPrivateChatBtn" class="flex-1 text-center font-bold text-xs py-1.5 text-slate-500">✉️ Private Messages</button>
+        </div>
+
+        <!-- Public Chat Container -->
+        <div id="publicChatSection" class="flex flex-col h-[420px]">
+          <div id="chatBox" class="flex-1 overflow-y-auto space-y-3 mb-3 p-2 bg-slate-50 rounded text-sm">
+            <p class="text-center text-slate-400 text-xs">စကားပြောဆိုမှု မရှိသေးပါ...</p>
+          </div>
+          <form id="chatForm" class="flex gap-2">
+            <input type="text" id="chatInput" placeholder="စကားပြောရန် စာရိုက်ပါ..." required class="flex-1 border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">ပို့မည်</button>
+          </form>
+        </div>
+
+        <!-- Private Chat Threads List -->
+        <div id="privateChatSection" class="hidden flex flex-col h-[420px]">
+          <div id="privateChatList" class="flex-1 overflow-y-auto space-y-2 p-1">
+            <p class="text-center text-slate-400 text-xs py-10">Private Chat စာရင်း မရှိသေးပါ။ Post များမှ User Profile ကို နှိပ်၍ Direct Message ပို့နိုင်ပါသည်။</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 5: Create Post (Available to Logged in Users) -->
+    <div id="tab-admin" class="tab-content space-y-4 hidden">
+      <div class="bg-white rounded-xl shadow p-4 border space-y-3">
+        <h2 class="text-base font-bold text-slate-800 border-b pb-2">⚙️ ပို့စ်အသစ် တင်ရန်</h2>
+        
+        <div id="loginWarning" class="bg-amber-50 border border-amber-200 text-amber-800 text-xs p-3 rounded-lg text-center">
+          ⚠️ ပို့စ်တင်ရန်အတွက် Login အရင်ဝင်ပေးပါ။
+        </div>
+
+        <form id="uploadForm" class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">ခေါင်းစဉ်</label>
+            <input type="text" id="adTitle" required placeholder="ခေါင်းစဉ် ရေးပါ..." class="w-full border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">အသေးစိတ် စာသား</label>
+            <textarea id="adDesc" rows="3" placeholder="အသေးစိတ် ရေးပါ..." class="w-full border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Tab ကဏ္ဍ</label>
+              <select id="adCat" class="w-full border p-2 rounded-lg text-sm bg-white outline-none">
+                <option value="feed">📰 သတင်းစင် (Feed)</option>
+                <option value="reels">🎬 Reels ဗီဒီယို</option>
+                <option value="ads">🏷️ VIP ကြော်ငြာ</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Tag အမျိုးအစား</label>
+              <select id="adSubCat" class="w-full border p-2 rounded-lg text-sm bg-white outline-none">
+                <option value="news">📰 သတင်း</option>
+                <option value="job">💼 အလုပ်အကိုင်</option>
+                <option value="realestate">🏠 အိမ်ခြံမြေ</option>
+                <option value="tech">💻 နည်းပညာ</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Media Attachments Section -->
+          <div class="space-y-2 pt-2 border-t">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">🖼️ ဓာတ်ပုံ ရွေးချယ်ရန်</label>
+              <input type="file" id="adImageFile" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">🎵 MP3 / Audio သီချင်း ရွေးရန် (Max 300KB)</label>
+              <input type="file" id="adAudioFile" accept="audio/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">🎬 Video Link (TikTok / YouTube / MP4)</label>
+              <input type="url" id="adVideoLink" placeholder="https://..." class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <button type="submit" id="uploadBtn" disabled class="w-full bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed">တင်မည် (Login ဝင်ပါ)</button>
+        </form>
+
+        <div id="uploadStatus" class="text-center text-xs hidden p-2 rounded"></div>
+      </div>
+    </div>
 
   </main>
 
-  <!-- Modals & Containers -->
-  <div id="chatModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-sm rounded-xl p-4 space-y-3">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 id="chatTargetName" class="font-bold text-sm">Direct Message</h3>
-        <button onclick="closeChatModal()" class="text-slate-400 font-bold">✕</button>
+  <!-- Private Chat Direct Modal -->
+  <div id="privateChatModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-4 flex flex-col h-[500px] relative">
+      <div class="flex items-center justify-between border-b pb-2 mb-2">
+        <div class="flex items-center gap-2">
+          <img id="pmTargetImg" class="w-7 h-7 rounded-full object-cover">
+          <span id="pmTargetName" class="font-bold text-xs text-slate-800"></span>
+        </div>
+        <button id="closePmModalBtn" class="text-slate-400 text-lg font-bold">✕</button>
       </div>
-      <div id="chatMessages" class="h-60 overflow-y-auto space-y-2 text-xs p-1"></div>
-      <form onsubmit="sendDirectMessage(event)" class="flex gap-2">
-        <input type="text" id="chatInput" placeholder="စာရေးရန်..." class="flex-1 border p-2 rounded-lg text-xs outline-none">
-        <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold">ပို့</button>
+
+      <div id="pmMessagesBox" class="flex-1 overflow-y-auto space-y-2 p-2 bg-slate-50 rounded text-xs">
+        <p class="text-center text-slate-400 text-[11px]">စကားစတင် ပြောဆိုပါ...</p>
+      </div>
+
+      <form id="pmForm" class="flex gap-2 pt-2 border-t mt-2">
+        <input type="text" id="pmInput" placeholder="Private စာရိုက်ပါ..." required class="flex-1 border p-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500">
+        <button type="submit" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold">ပို့မည်</button>
       </form>
     </div>
   </div>
 
-  <div id="appealModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-sm rounded-xl p-4 space-y-3">
-      <h3 class="font-bold text-sm">⚠️ အယူခံဝင်ရန်</h3>
-      <textarea id="appealReason" placeholder="အကြောင်းပြချက် ရေးသားပါ..." class="w-full border p-2 rounded-lg text-xs h-24"></textarea>
-      <div class="flex justify-end gap-2 text-xs">
-        <button onclick="closeAppealModal()" class="px-3 py-1.5 border rounded-lg">မလုပ်တော့ပါ</button>
-        <button onclick="submitAppeal()" class="px-3 py-1.5 bg-rose-600 text-white rounded-lg font-bold">တင်ပြမည်</button>
+  <!-- Edit Post Modal -->
+  <div id="editPostModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-3 relative">
+      <button id="closeEditModalBtn" class="absolute top-3 right-3 text-slate-400 text-lg font-bold">✕</button>
+      <h3 class="text-sm font-bold text-slate-800 border-b pb-2">✏️ ပို့စ် ပြင်ဆင်ရန်</h3>
+      
+      <input type="hidden" id="editPostId">
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-600 mb-1">ခေါင်းစဉ်</label>
+        <input type="text" id="editTitle" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
       </div>
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-600 mb-1">အသေးစိတ် စာသား</label>
+        <textarea id="editDesc" rows="3" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+      </div>
+      <button id="saveEditBtn" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-blue-700 transition">သိမ်းဆည်းမည်</button>
     </div>
   </div>
 
+  <!-- Bottom Navigation Bar -->
+  <nav class="bg-white border-t fixed bottom-0 left-0 right-0 flex justify-around py-2 shadow-lg z-50 text-[11px] font-semibold text-slate-500">
+    <button type="button" data-tab="feed" class="nav-btn text-blue-600 flex flex-col items-center flex-1"><span>📰</span>သတင်းစင်</button>
+    <button type="button" data-tab="reels" class="nav-btn flex flex-col items-center flex-1"><span>🎬</span>Reels</button>
+    <button type="button" data-tab="ads" class="nav-btn flex flex-col items-center flex-1"><span>🏷️</span>ကြော်ငြာ</button>
+    <button type="button" data-tab="chat" class="nav-btn flex flex-col items-center flex-1"><span>💬</span>Chat</button>
+    <button type="button" data-tab="admin" class="nav-btn flex flex-col items-center flex-1"><span>⚙️</span>Post တင်ရန်</button>
+  </nav>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
   <script>
-    // ⚠️ မိမိ၏ Firebase Config အချက်အလက်များဖြင့် အစားထိုးပါ
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyCowS-0LHle_7CniEU3VVLxSvBx9HX-9D8",
+      authDomain: "kyawngar-pro.firebaseapp.com",
+      databaseURL: "https://kyawngar-pro-default-rtdb.firebaseio.com",
+      projectId: "kyawngar-pro",
+      storageBucket: "kyawngar-pro.firebasestorage.app",
+      messagingSenderId: "640411826581",
+      appId: "1:640411826581:web:e95bfa58b7b2f93085de9c",
+      measurementId: "G-K19H2V1KC6"
     };
 
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    db.enablePersistence().catch(err => console.log("Persistence error:", err));
+
+    // Admin Email List (Specify emails that have full admin rights)
+    const ADMIN_EMAILS = ["admin@kyawngar.com", "kyawngarpro@gmail.com"];
+
     let currentUser = null;
-    let isUserAdmin = false;
+    let currentUserCustomPhoto = ""; 
+    let currentUserName = "";
+    let isAdmin = false;
+
+    let allAdsCache = [];
     let currentSearchQuery = "";
     let activeTag = "all";
-    let activeChatUid = null;
-    let activeAppealPostId = null;
 
-    // Admin List
-    const adminUids = ["YOUR_ADMIN_UID_1", "YOUR_ADMIN_UID_2"];
+    let currentPmTargetUid = null;
+    let pmUnsubscribe = null;
 
-    auth.onAuthStateChanged((user) => {
-      currentUser = user;
-      const profileArea = document.getElementById('userProfileArea');
-      if (user) {
-        isUserAdmin = adminUids.includes(user.uid);
-        profileArea.innerHTML = `
-          <img src="${user.photoURL || 'https://via.placeholder.com/32'}" class="w-8 h-8 rounded-full border">
-          <button onclick="logout()" class="text-xs text-rose-500 font-bold bg-rose-50 px-2 py-1 rounded-lg">Logout</button>
-        `;
-      } else {
-        isUserAdmin = false;
-        profileArea.innerHTML = `
-          <button onclick="loginWithGoogle()" class="bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg font-medium">🔑 Google Login</button>
-        `;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').innerText = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+
+    // High Performance Image Compression
+    function imageToBase64Compressed(file, maxWidth = 380, quality = 0.35) {
+      return new Promise((resolve, reject) => {
+        if (!file || !file.type.startsWith('image/')) return resolve(null);
+        
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+          const img = new Image();
+          img.src = e.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const base64String = canvas.toDataURL('image/jpeg', quality);
+            resolve(base64String);
+          };
+          img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+      });
+    }
+
+    function audioToBase64(file) {
+      return new Promise((resolve, reject) => {
+        if (!file || !file.type.startsWith('audio/')) return resolve(null);
+        if (file.size > 350000) {
+          return reject(new Error("Audio ဖိုင်အမျိုးအစား လိုင်းဆွဲအား သက်သာစေရန် 300KB အောက်သာ လက်ခံပါသည်။"));
+        }
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (err) => reject(err);
+      });
+    }
+
+    const authModal = document.getElementById('authModal');
+    const openAuthModalBtn = document.getElementById('openAuthModalBtn');
+    const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
+    const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const emailLoginBtn = document.getElementById('emailLoginBtn');
+    const emailSignUpBtn = document.getElementById('emailSignUpBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userInfo = document.getElementById('userInfo');
+    const userImg = document.getElementById('userImg');
+    const userNameLabel = document.getElementById('userNameLabel');
+    const adminBadge = document.getElementById('adminBadge');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const loginWarning = document.getElementById('loginWarning');
+    const authStatus = document.getElementById('authStatus');
+
+    openAuthModalBtn.addEventListener('click', () => authModal.classList.remove('hidden'));
+    closeAuthModalBtn.addEventListener('click', () => authModal.classList.add('hidden'));
+
+    function showAuthStatus(msg, isError = false) {
+      authStatus.className = `text-center text-[11px] block p-2 rounded ${isError ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`;
+      authStatus.innerText = msg;
+    }
+
+    googleLoginBtn.addEventListener('click', async () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try {
+        const res = await auth.signInWithPopup(provider);
+        const user = res.user;
+        
+        // Save user info to firestore
+        await db.collection("users").doc(user.uid).set({
+          displayName: user.displayName || user.email.split('@')[0],
+          email: user.email,
+          photoURL: user.photoURL || "",
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        authModal.classList.add('hidden');
+        showToast("Google Account ဖြင့် ဝင်ရောက်ပါပြီ");
+      } catch (err) {
+        showAuthStatus("Google Login အမှား: " + err.message, true);
       }
-      loadPosts();
     });
 
-    function loginWithGoogle() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider);
-    }
+    emailLoginBtn.addEventListener('click', async () => {
+      const email = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('passwordInput').value.trim();
+      if (!email || !password) return showAuthStatus("Email နှင့် Password ဖြည့်ပါ", true);
 
-    function logout() {
-      auth.signOut();
-    }
-
-    function createNewPost() {
-      if (!currentUser) return alert("ကျေးဇူးပြု၍ Google Login အရင်ဝင်ပါ");
-      
-      const title = document.getElementById('postTitle').value;
-      const description = document.getElementById('postDesc').value;
-      const category = document.getElementById('postCat').value;
-      const subCategory = document.getElementById('postSubCat').value || 'general';
-      const imageUrl = document.getElementById('postImage').value;
-      const videoUrl = document.getElementById('postVideo').value;
-      const audioUrl = document.getElementById('postAudio').value;
-
-      if (!title && !description && !imageUrl && !videoUrl && !audioUrl) {
-        return alert("အနည်းဆုံး အချက်အလက် တစ်ခုခု ဖြည့်သွင်းပါ");
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        authModal.classList.add('hidden');
+        showToast("Login ဝင်ရောက်မှု အောင်မြင်ပါသည်။");
+      } catch (err) {
+        showAuthStatus("Login မှားယွင်းမှု: " + err.message, true);
       }
+    });
 
-      db.collection("posts").add({
-        title,
-        description,
-        category,
-        subCategory,
-        imageUrl,
-        videoUrl,
-        audioUrl,
-        authorUid: currentUser.uid,
-        authorName: currentUser.displayName || 'Anonym',
-        authorPhoto: currentUser.photoURL || '',
-        status: 'active',
-        likes: [],
-        comments: [],
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        document.getElementById('postTitle').value = "";
-        document.getElementById('postDesc').value = "";
-        document.getElementById('postImage').value = "";
-        document.getElementById('postVideo').value = "";
-        document.getElementById('postAudio').value = "";
-        alert("ပို့စ် အောင်မြင်စွာ တင်ပြီးပါပြီ");
-      }).catch(err => alert(err.message));
-    }
-            // Helper Functions for Video URLs
+    emailSignUpBtn.addEventListener('click', async () => {
+      const username = document.getElementById('usernameInput').value.trim();
+      const email = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('passwordInput').value.trim();
+      if (!username || !email || !password) return showAuthStatus("Username, Email နှင့် Password အကုန်ဖြည့်ပါ", true);
+
+      try {
+        const res = await auth.createUserWithEmailAndPassword(email, password);
+        const user = res.user;
+        await user.updateProfile({ displayName: username });
+
+        await db.collection("users").doc(user.uid).set({
+          displayName: username,
+          email: email,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        showAuthStatus("အကောင့်အောင်မြင်စွာ ဖွင့်ပြီးပါပြီ!");
+        showToast("အကောင့်သစ် ဖွင့်လှစ်ခြင်း အောင်မြင်သည်");
+        setTimeout(() => authModal.classList.add('hidden'), 1000);
+      } catch (err) {
+       showAuthStatus("အကောင့်ဖွင့်ခြင်း အမှား: " + err.message, true);
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut();
+      showToast("အကောင့်မှ ထွက်လိုက်ပါပြီ");
+    });
+
+    const changeProfileBtn = document.getElementById('changeProfileBtn');
+    const profileFileInput = document.getElementById('profileFileInput');
+
+    changeProfileBtn.addEventListener('click', () => profileFileInput.click());
+
+    profileFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file || !currentUser) return;
+
+      showToast("Profile ပြင်ဆင်နေပါသည်...");
+
+      try {
+        const base64Photo = await imageToBase64Compressed(file, 120, 0.3);
+        
+        await db.collection("users").doc(currentUser.uid).set({
+          photoURL: base64Photo,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        currentUserCustomPhoto = base64Photo;
+        userImg.src = base64Photo;
+        showToast("Profile ဓာတ်ပုံ အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ!");
+        renderAdsData(allAdsCache);
+      } catch (err) {
+        showToast("ဓာတ်ပုံ တင်ရာတွင် အမှားရှိပါသည်: " + err.message);
+      }
+    });
+
+    auth.onAuthStateChanged(async (user) => {
+      currentUser = user;
+      if (user) {
+        openAuthModalBtn.classList.add('hidden');
+        userInfo.classList.remove('hidden');
+        
+        // Admin Check
+        isAdmin = ADMIN_EMAILS.includes(user.email);
+        if (isAdmin) {
+          adminBadge.classList.remove('hidden');
+        } else {
+          adminBadge.classList.add('hidden');
+        }
+
+        try {
+          const userDoc = await db.collection("users").doc(user.uid).get();
+          if (userDoc.exists) {
+            const data = userDoc.data();
+            currentUserCustomPhoto = data.photoURL || user.photoURL || 'https://via.placeholder.com/40';
+            currentUserName = data.displayName || user.displayName || user.email.split('@')[0];
+          } else {
+            currentUserCustomPhoto = user.photoURL || 'https://via.placeholder.com/40';
+            currentUserName = user.displayName || user.email.split('@')[0];
+          }
+        } catch(e) {
+          currentUserCustomPhoto = user.photoURL || 'https://via.placeholder.com/40';
+          currentUserName = user.displayName || user.email.split('@')[0];
+        }
+
+        userImg.src = currentUserCustomPhoto;
+        userNameLabel.innerText = currentUserName;
+
+        loginWarning.classList.add('hidden');
+        uploadBtn.disabled = false;
+        uploadBtn.className = "w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg text-sm hover:bg-blue-700 transition cursor-pointer";
+        uploadBtn.innerText = "တင်မည်";
+      } else {
+        openAuthModalBtn.classList.remove('hidden');
+        userInfo.classList.add('hidden');
+        loginWarning.classList.remove('hidden');
+        uploadBtn.disabled = true;
+        uploadBtn.className = "w-full bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm cursor-not-allowed";
+        uploadBtn.innerText = "တင်မည် (Login ဝင်ပါ)";
+        currentUserCustomPhoto = "";
+        currentUserName = "";
+        isAdmin = false;
+      }
+      renderAdsData(allAdsCache);
+    });
+
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    navButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.getAttribute('data-tab');
+        tabContents.forEach(c => c.classList.add('hidden'));
+        document.getElementById(`tab-${targetTab}`).classList.remove('hidden');
+        navButtons.forEach(b => { b.classList.remove('text-blue-600'); b.classList.add('text-slate-500'); });
+        btn.classList.remove('text-slate-500'); btn.classList.add('text-blue-600');
+        window.scrollTo(0, 0);
+      });
+    });
+
+    const tagButtons = document.querySelectorAll('.tag-btn');
+    tagButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeTag = btn.getAttribute('data-tag');
+        tagButtons.forEach(b => {
+          b.classList.remove('bg-blue-600', 'text-white');
+          b.classList.add('bg-slate-100', 'text-slate-600');
+        });
+        btn.classList.remove('bg-slate-100', 'text-slate-600');
+        btn.classList.add('bg-blue-600', 'text-white');
+        renderAdsData(allAdsCache);
+      });
+    });
+
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', (e) => {
+      currentSearchQuery = e.target.value.toLowerCase().trim();
+      renderAdsData(allAdsCache);
+    });
+    document.getElementById('clearSearchBtn').addEventListener('click', () => {
+      searchInput.value = "";
+      currentSearchQuery = "";
+      renderAdsData(allAdsCache);
+    });
+
     function getYoutubeId(url) {
       if (!url) return null;
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-      const match = url.match(regExp);
+      const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
@@ -206,27 +599,172 @@
       return match ? match[1] : null;
     }
 
-    function loadPosts() {
-      db.collection("posts").orderBy("createdAt", "desc").onSnapshot(snapshot => {
-        const posts = [];
-        snapshot.forEach(doc => {
-          posts.push({ id: doc.id, ...doc.data() });
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentUser) return showToast("Login အရင်ဝင်ပါ!");
+
+      const title = document.getElementById('adTitle').value.trim();
+      const desc = document.getElementById('adDesc').value.trim();
+      const cat = document.getElementById('adCat').value;
+      const subCat = document.getElementById('adSubCat').value;
+      const videoLink = document.getElementById('adVideoLink').value.trim();
+      const imageFile = document.getElementById('adImageFile').files[0];
+      const audioFile = document.getElementById('adAudioFile').files[0];
+      
+      const status = document.getElementById('uploadStatus');
+      uploadBtn.disabled = true;
+
+      try {
+        let imageUrl = "";
+        let audioBase64 = "";
+
+        if (imageFile) {
+          status.classList.remove('hidden');
+          status.className = "text-center text-xs block bg-blue-50 text-blue-700 p-2 rounded font-semibold border border-blue-200";
+          status.innerText = "🖼️ ဓာတ်ပုံကို လိုင်းဆွဲအား သက်သာစေရန် ချုံ့ပေးနေပါသည်...";
+          
+          imageUrl = await imageToBase64Compressed(imageFile, 380, 0.35);
+        }
+
+        if (audioFile) {
+          status.classList.remove('hidden');
+          status.className = "text-center text-xs block bg-purple-50 text-purple-700 p-2 rounded font-semibold border border-purple-200";
+          status.innerText = "🎵 Audio ဖိုင် စစ်ဆေးနေပါသည်...";
+          
+          audioBase64 = await audioToBase64(audioFile);
+        }
+
+        const postData = {
+          title: title,
+          description: desc,
+          category: cat,
+          subCategory: subCat,
+          authorUid: currentUser.uid,
+          authorName: currentUserName,
+          authorEmail: currentUser.email,
+          authorPhoto: currentUserCustomPhoto || "",
+          likes: [],
+          comments: [],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (imageUrl) postData.imageUrl = imageUrl;
+        if (audioBase64) postData.audioUrl = audioBase64;
+        if (videoLink) postData.videoUrl = videoLink;
+
+        await db.collection("ads").add(postData);
+
+        status.className = "text-center text-xs block bg-emerald-50 text-emerald-700 p-2.5 rounded font-semibold border border-emerald-200";
+        status.innerText = "🎉 ပို့စ် တင်ပြီးပါပြီ!";
+        showToast("ပို့စ်အသစ် တင်ပြီးပါပြီ!");
+        document.getElementById('uploadForm').reset();
+      } catch (err) {
+        status.className = "text-center text-xs block bg-rose-50 text-rose-600 p-2 rounded font-semibold border border-rose-200";
+        status.innerText = "❌ တင်ရာတွင် အမှားရှိပါသည်: " + err.message;
+      } finally {
+        uploadBtn.disabled = false;
+      }
+    });
+    // Delete Post - Admin or Owner
+    async function deletePost(id, authorUid) {
+      if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
+      
+      if (!isAdmin && currentUser.uid !== authorUid) {
+        return showToast("မိမိတင်ထားသော ပို့စ်များကိုသာ ဖျက်ပိုင်ခွင့်ရှိပါသည်။");
+      }
+
+      if (confirm(isAdmin ? "Admin အဖြစ် ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?" : "ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?")) {
+        try {
+          await db.collection("ads").doc(id).delete();
+          showToast("ပို့စ်ကို ဖျက်ပြီးပါပြီ!");
+        } catch (err) {
+          showToast("ဖျက်ရာတွင် အမှားရှိပါသည်: " + err.message);
+        }
+      }
+    }
+
+    // Edit Post Modal Trigger
+    function openEditPostModal(id, title, desc) {
+      document.getElementById('editPostId').value = id;
+      document.getElementById('editTitle').value = title;
+      document.getElementById('editDesc').value = desc;
+      document.getElementById('editPostModal').classList.remove('hidden');
+    }
+
+    document.getElementById('closeEditModalBtn').addEventListener('click', () => {
+      document.getElementById('editPostModal').classList.add('hidden');
+    });
+
+    document.getElementById('saveEditBtn').addEventListener('click', async () => {
+      const id = document.getElementById('editPostId').value;
+      const title = document.getElementById('editTitle').value.trim();
+      const desc = document.getElementById('editDesc').value.trim();
+
+      if (!title) return showToast("ခေါင်းစဉ် ဖြည့်ပါ");
+
+      try {
+        await db.collection("ads").doc(id).update({
+          title: title,
+          description: desc,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        renderAdsData(posts);
+        showToast("ပို့စ် ပြင်ဆင်ပြီးပါပြီ!");
+        document.getElementById('editPostModal').classList.add('hidden');
+      } catch (err) {
+        showToast("ပြင်ဆင်ရာတွင် အမှားရှိပါသည်: " + err.message);
+      }
+    });
+
+    async function toggleLike(postId, likesArray) {
+      if (!currentUser) return showToast("Like ပေးရန် အကောင့်ဝင်ပါ!");
+      const postRef = db.collection("ads").doc(postId);
+      const uid = currentUser.uid;
+
+      if (likesArray.includes(uid)) {
+        await postRef.update({ likes: firebase.firestore.FieldValue.arrayRemove(uid) });
+      } else {
+        await postRef.update({ likes: firebase.firestore.FieldValue.arrayUnion(uid) });
+      }
+    }
+
+    async function addComment(postId, e) {
+      e.preventDefault();
+      if (!currentUser) return showToast("Comment ရေးရန် အကောင့်ဝင်ပါ!");
+      const input = e.target.querySelector('input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const commentObj = {
+        userName: currentUserName,
+        userPhoto: currentUserCustomPhoto || "",
+        text: text,
+        createdAt: new Date().toISOString()
+      };
+
+      await db.collection("ads").doc(postId).update({
+        comments: firebase.firestore.FieldValue.arrayUnion(commentObj)
       });
+      input.value = "";
     }
 
-    function handleSearch(val) {
-      currentSearchQuery = val.toLowerCase();
-      loadPosts();
+    function sharePost(title, url) {
+      if (navigator.share) {
+        navigator.share({ title: title, url: url || window.location.href });
+      } else {
+        navigator.clipboard.writeText(url || window.location.href);
+        showToast("Post Link ကို Copy ကူးပြီးပါပြီ!");
+      }
     }
 
-    function filterTag(tag) {
-      activeTag = tag;
-      loadPosts();
-    }
+    // High Speed Fetch Optimization
+    db.collection("ads").orderBy("createdAt", "desc").limit(20).onSnapshot((snapshot) => {
+      allAdsCache = [];
+      snapshot.forEach(doc => {
+        allAdsCache.push({ id: doc.id, ...doc.data() });
+      });
+      renderAdsData(allAdsCache);
+    });
 
-    // Main Data Renderer (Fixed & Working)
     function renderAdsData(ads) {
       let feedHtml = "", reelsHtml = "", paidHtml = "";
 
@@ -244,12 +782,6 @@
         const likes = data.likes || [];
         const comments = data.comments || [];
         const isLiked = currentUser && likes.includes(currentUser.uid);
-        const isOwner = currentUser && (currentUser.uid === data.authorUid);
-
-        // Hidden Post Logic
-        if (data.status === "hidden" && !isOwner && !isUserAdmin) {
-          return;
-        }
 
         let mediaTag = "";
 
@@ -307,28 +839,20 @@
           }
         }
 
-        const authorName = data.authorName || 'unknown';
-        const authorPhoto = data.authorPhoto ? `<img src="${data.authorPhoto}" onclick="openDirectChat('${data.authorUid}', '${authorName}')" class="w-6 h-6 rounded-full object-cover cursor-pointer" loading="lazy" title="Private Msg ပို့ရန် နှိပ်ပါ">` : `<div onclick="openDirectChat('${data.authorUid}', '${authorName}')" class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] cursor-pointer" title="Private Msg ပို့ရန် နှိပ်ပါ">👤</div>`;
+        const authorPhoto = data.authorPhoto 
+          ? `<img src="${data.authorPhoto}" onclick="openPrivateChat('${data.authorUid}', '${data.authorName || 'User'}', '${data.authorPhoto}')" class="w-7 h-7 rounded-full object-cover cursor-pointer hover:opacity-80" title="Direct Message ပို့ရန် နှိပ်ပါ">` 
+          : `<div onclick="openPrivateChat('${data.authorUid}', '${data.authorName || 'User'}', '')" class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] cursor-pointer" title="Direct Message ပို့ရန် နှိပ်ပါ">👤</div>`;
         
-        const canDelete = currentUser && (currentUser.uid === data.authorUid || isUserAdmin);
+        const isOwner = currentUser && (currentUser.uid === data.authorUid);
+        const canDelete = isAdmin || isOwner;
+        const canEdit = isOwner;
 
         let commentsList = comments.slice(-2).map(c => `
           <div class="text-[11px] bg-slate-100 p-1.5 rounded flex items-start gap-1.5">
-            <img src="${c.userPhoto || 'https://via.placeholder.com/20'}" onclick="openDirectChat('${c.userUid}', '${c.userName}')" class="w-4 h-4 rounded-full mt-0.5 object-cover cursor-pointer" loading="lazy">
-            <div><span class="font-bold text-slate-700">@${c.userName}:</span> ${c.text}</div>
+            <img src="${c.userPhoto || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full mt-0.5 object-cover">
+            <div><span class="font-bold text-slate-700">${c.userName}:</span> ${c.text}</div>
           </div>
         `).join('');
-
-        let hiddenNotice = "";
-        if (data.status === "hidden") {
-          hiddenNotice = `
-            <div class="bg-rose-50 border border-rose-200 p-2.5 rounded-lg text-xs text-rose-700 space-y-1">
-              <p class="font-bold">⚠️ ကျွန်ုပ်တို့၏ လူမှုစံနှုန်းများနှင့် မညီညွတ်သောကြောင့် ဤပို့စ်အား အများမြင်ကွင်းမှ ဖျောက်ထားပါသည်။</p>
-              <p class="text-[10px] text-rose-500">အကြောင်းအရင်း: ${data.hideReason || "စံနှုန်းမညီပါ"}</p>
-              <button onclick="openAppealModal('${data.id}')" class="bg-rose-600 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-rose-700 transition">အယူခံဝင်မည်</button>
-            </div>
-          `;
-        }
 
         const card = `
           <div class="bg-white border rounded-xl p-3 shadow-sm space-y-2">
@@ -336,22 +860,17 @@
               <div class="flex items-center gap-2">
                 ${authorPhoto}
                 <div>
-                  <h4 class="font-bold text-slate-800 text-xs flex items-center gap-1">
-                    @${authorName}
-                    <button onclick="openDirectChat('${data.authorUid}', '${authorName}')" class="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-normal">💬 စာပို့</button>
-                  </h4>
+                  <h4 class="font-bold text-slate-800 text-xs cursor-pointer hover:underline" onclick="openPrivateChat('${data.authorUid}', '${data.authorName || 'User'}', '${data.authorPhoto || ''}')">${data.authorName || 'Unknown'}</h4>
                   <span class="text-[10px] text-slate-400">${data.subCategory ? '#' + data.subCategory : ''}</span>
                 </div>
               </div>
-              <div class="flex items-center gap-1">
-                ${isUserAdmin && data.status !== "hidden" ? `<button onclick="adminHidePost('${data.id}')" class="text-xs text-amber-600 font-semibold hover:underline">⚠️ ဖျောက်မည်</button>` : ''}
+              <div class="flex gap-2">
+                ${canEdit ? `<button onclick="openEditPostModal('${data.id}', '${data.title.replace(/'/g, "\\'")}', '${(data.description || '').replace(/'/g, "\\'")}')" class="text-xs text-blue-500 font-semibold hover:underline">✏️ ပြင်မည်</button>` : ''}
                 ${canDelete ? `<button onclick="deletePost('${data.id}', '${data.authorUid}')" class="text-xs text-rose-500 font-semibold hover:underline">🗑️ ဖျက်မည်</button>` : ''}
               </div>
             </div>
 
-            ${hiddenNotice}
-
-            <h3 class="font-bold text-slate-900 text-sm">${data.title || ''}</h3>
+            <h3 class="font-bold text-slate-900 text-sm">${data.title}</h3>
             ${data.description ? `<p class="text-slate-600 text-xs leading-relaxed">${data.description}</p>` : ''}
             
             ${mediaTag}
@@ -361,7 +880,7 @@
                 ${isLiked ? '❤️' : '🤍'} <span>${likes.length}</span>
               </button>
               <button class="flex items-center gap-1">💬 <span>${comments.length}</span></button>
-              <button onclick="sharePost('${data.title || ''}', '${data.videoUrl || data.imageUrl || ''}')" class="flex items-center gap-1 text-blue-600">↪️ ရှယ်မည်</button>
+              <button onclick="sharePost('${data.title}', '${data.videoUrl || data.imageUrl || ''}')" class="flex items-center gap-1 text-blue-600">↪️ ရှယ်မည်</button>
             </div>
 
             <div class="space-y-1.5">
@@ -379,7 +898,6 @@
         if (cat === 'ads') paidHtml += card;
       });
 
-      // innerHTML မှန်ကန်စွာ Assign လုပ်ပေးခြင်း
       document.getElementById('feedAds').innerHTML = feedHtml || '<p class="text-center text-slate-400 py-8 text-xs">သတင်းများ မရှိသေးပါ</p>';
       document.getElementById('reelsAds').innerHTML = reelsHtml || '<p class="text-center text-slate-400 py-8 text-xs">Reels မရှိသေးပါ</p>';
       document.getElementById('paidAds').innerHTML = paidHtml || '<p class="text-center text-slate-400 py-8 text-xs">VIP ကြော်ငြာ မရှိသေးပါ</p>';
@@ -387,142 +905,190 @@
       if (window.tiktokEmbed) window.tiktokEmbed.load();
     }
 
-    // Actions
-    function toggleLike(postId, likes) {
-      if (!currentUser) return alert("Login အရင်ဝင်ပါ");
-      const uid = currentUser.uid;
-      const updatedLikes = likes.includes(uid) ? likes.filter(id => id !== uid) : [...likes, uid];
-      db.collection("posts").doc(postId).update({ likes: updatedLikes });
-    }
-
-    function addComment(postId, e) {
-      e.preventDefault();
-      if (!currentUser) return alert("Login အရင်ဝင်ပါ");
-      const input = e.target.querySelector('input');
-      const text = input.value.trim();
-      if (!text) return;
-
-      const newComment = {
-        userUid: currentUser.uid,
-        userName: currentUser.displayName || 'Anonym',
-        userPhoto: currentUser.photoURL || '',
-        text,
-        createdAt: new Date().toISOString()
-      };
-
-      db.collection("posts").doc(postId).update({
-        comments: firebase.firestore.FieldValue.arrayUnion(newComment)
-      }).then(() => input.value = "");
-    }
-
-    function deletePost(postId, authorUid) {
-      if (!currentUser) return;
-      if (currentUser.uid !== authorUid && !isUserAdmin) return alert("ဖျက်ပိုင်ခွင့်မရှိပါ");
-      if (confirm("ဒီပို့စ်ကို ဖျက်မှာ သေချာပါသလား?")) {
-        db.collection("posts").doc(postId).delete();
-      }
-    }
-
-    function adminHidePost(postId) {
-      const reason = prompt("ဖျောက်ရသည့် အကြောင်းအရင်း ရေးပါ:", "စံနှုန်းများနှင့် မညီညွတ်ပါ");
-      if (reason) {
-        db.collection("posts").doc(postId).update({
-          status: "hidden",
-          hideReason: reason
-        });
-      }
-    }
-
-    function sharePost(title, url) {
-      if (navigator.share) {
-        navigator.share({ title: title, url: url || window.location.href });
-      } else {
-        navigator.clipboard.writeText(url || window.location.href);
-        alert("Link ကို Copy ကူးလိုက်ပါပြီ");
-      }
-    }
-
-    // DM Logic
-    function openDirectChat(targetUid, targetName) {
-      if (!currentUser) return alert("Login အရင်ဝင်ပါ");
-      if (targetUid === currentUser.uid) return alert("မိမိကိုယ်တိုင် စာပို့၍ မရပါ");
-      activeChatUid = targetUid;
-      document.getElementById('chatTargetName').innerText = `@${targetName}`;
-      document.getElementById('chatModal').classList.remove('hidden');
-      loadChatMessages();
-    }
-
-    function closeChatModal() {
-      document.getElementById('chatModal').classList.add('hidden');
-      activeChatUid = null;
-    }
-
-    function sendDirectMessage(e) {
+    // Public Chat System
+    document.getElementById('chatForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const input = document.getElementById('chatInput');
       const text = input.value.trim();
-      if (!text || !activeChatUid) return;
+      if (!text) return;
 
-      db.collection("messages").add({
-        senderUid: currentUser.uid,
-        receiverUid: activeChatUid,
-        text,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => input.value = "");
+      const senderName = currentUser ? currentUserName : "ဧည့်သည်";
+      const senderPhoto = currentUser ? currentUserCustomPhoto : "";
+      const senderUid = currentUser ? currentUser.uid : "guest";
+
+      try {
+        await db.collection("chats").add({
+          text: text,
+          sender: senderName,
+          senderPhoto: senderPhoto,
+          senderUid: senderUid,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        input.value = "";
+      } catch (err) {
+        showToast("စာပို့ရာတွင် အမှားရှိပါသည်: " + err.message);
+      }
+    });
+
+    db.collection("chats").orderBy("createdAt", "desc").limit(25).onSnapshot((snapshot) => {
+      let messages = [];
+      snapshot.forEach(doc => messages.unshift(doc.data()));
+
+      let html = "";
+      messages.forEach(c => {
+        const isMe = currentUser && (currentUser.uid === c.senderUid);
+        const photo = c.senderPhoto 
+          ? `<img src="${c.senderPhoto}" onclick="openPrivateChat('${c.senderUid}', '${c.sender}', '${c.senderPhoto}')" class="w-5 h-5 rounded-full inline object-cover cursor-pointer">` 
+          : '';
+        
+        let timeStr = "";
+        if (c.createdAt && c.createdAt.toDate) {
+          const date = c.createdAt.toDate();
+          timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        html += `
+          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+            <div class="flex items-center gap-1 text-[10px] text-slate-400 mb-0.5">
+              ${!isMe ? photo : ''}
+              <span class="font-bold text-slate-600 cursor-pointer" onclick="openPrivateChat('${c.senderUid}', '${c.sender}', '${c.senderPhoto}')">${c.sender || 'Guest'}</span>
+              ${isMe ? photo : ''}
+              <span class="text-[9px] text-slate-400 ml-1">${timeStr}</span>
+            </div>
+            <div class="p-2 rounded-xl text-xs max-w-[80%] ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border text-slate-800 rounded-tl-none'}">
+              ${c.text}
+            </div>
+          </div>
+        `;
+      });
+      const chatBox = document.getElementById('chatBox');
+      chatBox.innerHTML = html || '<p class="text-center text-slate-400 text-xs">စကားပြောဆိုမှု မရှိသေးပါ</p>';
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    // Chat Tab Toggle (Public vs Private)
+    const showPublicChatBtn = document.getElementById('showPublicChatBtn');
+    const showPrivateChatBtn = document.getElementById('showPrivateChatBtn');
+    const publicChatSection = document.getElementById('publicChatSection');
+    const privateChatSection = document.getElementById('privateChatSection');
+
+    showPublicChatBtn.addEventListener('click', () => {
+      publicChatSection.classList.remove('hidden');
+      privateChatSection.classList.add('hidden');
+      showPublicChatBtn.className = "flex-1 text-center font-bold text-xs py-1.5 border-b-2 border-blue-600 text-blue-600";
+      showPrivateChatBtn.className = "flex-1 text-center font-bold text-xs py-1.5 text-slate-500";
+    });
+
+    showPrivateChatBtn.addEventListener('click', () => {
+      if (!currentUser) return showToast("Private Messages အတွက် အကောင့်ဝင်ပါ!");
+      publicChatSection.classList.add('hidden');
+      privateChatSection.classList.remove('hidden');
+      showPrivateChatBtn.className = "flex-1 text-center font-bold text-xs py-1.5 border-b-2 border-blue-600 text-blue-600";
+      showPublicChatBtn.className = "flex-1 text-center font-bold text-xs py-1.5 text-slate-500";
+      loadPrivateChatList();
+    });
+
+    // Direct / Private Message System
+    function getChatRoomId(uid1, uid2) {
+      return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
     }
 
-    function loadChatMessages() {
-      if (!currentUser || !activeChatUid) return;
-      
-      db.collection("messages")
-        .orderBy("createdAt", "asc")
-        .onSnapshot(snapshot => {
-          let chatHtml = "";
-          snapshot.forEach(doc => {
-            const msg = doc.data();
-            const isMe = msg.senderUid === currentUser.uid;
-            const isBetweenUs = (msg.senderUid === currentUser.uid && msg.receiverUid === activeChatUid) ||
-                              (msg.senderUid === activeChatUid && msg.receiverUid === currentUser.uid);
+    function openPrivateChat(targetUid, targetName, targetPhoto) {
+      if (!currentUser) return showToast("Private Message ပို့ရန် အကောင့်ဝင်ပါ!");
+      if (currentUser.uid === targetUid) return showToast("မိမိကိုယ်တိုင်ထံ စာပို့၍မရပါ");
 
-            if (isBetweenUs) {
-              chatHtml += `
-                <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
-                  <div class="${isMe ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-800'} p-2 rounded-xl max-w-[80%] break-words">
-                    ${msg.text}
-                  </div>
+      currentPmTargetUid = targetUid;
+      document.getElementById('pmTargetName').innerText = targetName || 'User';
+      document.getElementById('pmTargetImg').src = targetPhoto || 'https://via.placeholder.com/30';
+      document.getElementById('privateChatModal').classList.remove('hidden');
+
+      const roomId = getChatRoomId(currentUser.uid, targetUid);
+      
+      if (pmUnsubscribe) pmUnsubscribe();
+
+      pmUnsubscribe = db.collection("private_chats").doc(roomId).collection("messages")
+        .orderBy("createdAt", "asc").onSnapshot(snapshot => {
+          let html = "";
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const isMe = data.senderUid === currentUser.uid;
+            html += `
+              <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} my-1">
+                <div class="p-2 rounded-xl text-xs max-w-[80%] ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border text-slate-800 rounded-tl-none'}">
+                  ${data.text}
                 </div>
-              `;
-            }
+              </div>
+            `;
           });
-          const box = document.getElementById('chatMessages');
-          box.innerHTML = chatHtml || '<p class="text-center text-slate-400">စကားပြောဆိုမှု မရှိသေးပါ</p>';
-          box.scrollTop = box.scrollHeight;
+          const pmBox = document.getElementById('pmMessagesBox');
+          pmBox.innerHTML = html || '<p class="text-center text-slate-400 text-[11px]">စကားစတင် ပြောဆိုပါ...</p>';
+          pmBox.scrollTop = pmBox.scrollHeight;
         });
     }
 
-    // Appeals Logic
-    function openAppealModal(postId) {
-      activeAppealPostId = postId;
-      document.getElementById('appealModal').classList.remove('hidden');
-    }
+    document.getElementById('closePmModalBtn').addEventListener('click', () => {
+      document.getElementById('privateChatModal').classList.add('hidden');
+      if (pmUnsubscribe) pmUnsubscribe();
+    });
 
-    function closeAppealModal() {
-      document.getElementById('appealModal').classList.add('hidden');
-      activeAppealPostId = null;
-    }
+    document.getElementById('pmForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentUser || !currentPmTargetUid) return;
 
-    function submitAppeal() {
-      const reason = document.getElementById('appealReason').value;
-      if (!reason || !activeAppealPostId) return alert("အကြောင်းပြချက် ဖြည့်သွင်းပါ");
+      const input = document.getElementById('pmInput');
+      const text = input.value.trim();
+      if (!text) return;
 
-      db.collection("appeals").add({
-        postId: activeAppealPostId,
-        userUid: currentUser.uid,
-        reason,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        alert("အယူခံလွှာ ပို့ပြီးပါပြီ။ Admin မကြာမီ စစ်ဆေးပေးပါမည်။");
-        closeAppealModal();
+      const roomId = getChatRoomId(currentUser.uid, currentPmTargetUid);
+
+      try {
+        await db.collection("private_chats").doc(roomId).collection("messages").add({
+          text: text,
+          senderUid: currentUser.uid,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Save last thread info
+        await db.collection("users").doc(currentUser.uid).collection("threads").doc(currentPmTargetUid).set({
+          targetUid: currentPmTargetUid,
+          lastMessage: text,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        await db.collection("users").doc(currentPmTargetUid).collection("threads").doc(currentUser.uid).set({
+          targetUid: currentUser.uid,
+          lastMessage: text,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        input.value = "";
+      } catch (err) {
+        showToast("စာပို့ရာတွင် အမှားရှိပါသည်: " + err.message);
+      }
+    });
+
+    // Load Private Chat Threads List
+    function loadPrivateChatList() {
+      if (!currentUser) return;
+
+      db.collection("users").doc(currentUser.uid).collection("threads").orderBy("updatedAt", "desc").onSnapshot(async (snapshot) => {
+        let html = "";
+        for (const doc of snapshot.docs) {
+          const thread = doc.data();
+          const targetUserDoc = await db.collection("users").doc(thread.targetUid).get();
+          const targetData = targetUserDoc.exists ? targetUserDoc.data() : {};
+          
+          html += `
+            <div onclick="openPrivateChat('${thread.targetUid}', '${targetData.displayName || 'User'}', '${targetData.photoURL || ''}')" class="p-2 bg-white border rounded-xl flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition">
+              <img src="${targetData.photoURL || 'https://via.placeholder.com/35'}" class="w-9 h-9 rounded-full object-cover">
+              <div class="flex-1 min-w-0">
+                <h4 class="font-bold text-xs text-slate-800">${targetData.displayName || 'User'}</h4>
+                <p class="text-[11px] text-slate-500 truncate">${thread.lastMessage || ''}</p>
+              </div>
+            </div>
+          `;
+        }
+        document.getElementById('privateChatList').innerHTML = html || '<p class="text-center text-slate-400 text-xs py-10">Private Chat စာရင်း မရှိသေးပါ။</p>';
       });
     }
   </script>
