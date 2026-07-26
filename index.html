@@ -52,8 +52,9 @@
         </div>
         <div class="flex flex-col text-left">
           <span id="userNameLabel" class="text-xs font-bold leading-tight"></span>
-          <span id="adminBadge" class="text-[9px] bg-amber-400 text-slate-900 font-extrabold px-1 rounded hidden w-max">ADMIN</span>
+          <span id="adminBadge" class="text-[9px] bg-amber-400 text-slate-900 font-extrabold px-1 rounded hidden w-max cursor-pointer" title="Admin Auth">ADMIN</span>
         </div>
+        <button id="adminLoginBtn" class="bg-amber-500 text-slate-900 text-[10px] font-bold px-2 py-1 rounded hover:bg-amber-400 transition ml-1">Admin Access</button>
         <button id="logoutBtn" class="bg-rose-500 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-rose-600 transition ml-1">ထွက်မည်</button>
       </div>
     </div>
@@ -61,6 +62,23 @@
 
   <!-- Hidden Profile Photo Input -->
   <input type="file" id="profileFileInput" accept="image/*" class="hidden">
+
+  <!-- Admin Passcode Modal Popup -->
+  <div id="adminModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-4 relative">
+      <button id="closeAdminModalBtn" class="absolute top-3 right-3 text-slate-400 text-lg font-bold">✕</button>
+      <h3 class="text-base font-bold text-slate-800 text-center">🛡️ Admin Security Access</h3>
+      <p class="text-xs text-slate-500 text-center">Admin စနစ်သို့ ဝင်ရောက်ရန် လျှို့ဝှက် Password ကို ဖြည့်သွင်းပါ။</p>
+      
+      <div>
+        <input type="password" id="adminPasscodeInput" placeholder="Admin Passcode ရိုက်ပါ..." class="w-full border p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500 text-center font-bold tracking-widest">
+      </div>
+      
+      <button id="submitAdminPasscodeBtn" class="w-full bg-amber-500 text-slate-900 font-bold py-2.5 rounded-lg text-xs hover:bg-amber-400 transition shadow">
+        Admin Mode ဖွင့်မည်
+      </button>
+    </div>
+  </div>
 
   <!-- Login/Register Modal Popup -->
   <div id="authModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
@@ -143,32 +161,66 @@
       </div>
     </div>
 
-    <!-- Tab 4: Chat / Messenger -->
+    <!-- Tab 4: Full Messenger Chat System -->
     <div id="tab-chat" class="tab-content space-y-4 hidden">
-      <!-- Public Chat & Direct Message Switcher Header -->
-      <div class="bg-white p-3 rounded-xl shadow border space-y-2">
-        <div class="flex border-b pb-2">
-          <button id="showPublicChatBtn" class="flex-1 text-center font-bold text-xs py-1.5 border-b-2 border-blue-600 text-blue-600">💬 Community Chat</button>
-          <button id="showPrivateChatBtn" class="flex-1 text-center font-bold text-xs py-1.5 text-slate-500">✉️ Private Messages</button>
+      <div class="bg-white rounded-2xl shadow border overflow-hidden flex flex-col h-[520px]">
+        
+        <!-- Messenger Top Switcher Bar -->
+        <div class="flex border-b bg-slate-50 p-2 gap-1" id="chatCategoryHeader">
+          <button id="showPrivateChatBtn" class="flex-1 text-center font-bold text-xs py-2 rounded-lg bg-blue-600 text-white shadow-sm transition">⚡ Messenger</button>
+          <button id="showPublicChatBtn" class="flex-1 text-center font-bold text-xs py-2 rounded-lg text-slate-600 hover:bg-slate-200 transition">💬 Public Group</button>
         </div>
 
-        <!-- Public Chat Container -->
-        <div id="publicChatSection" class="flex flex-col h-[420px]">
-          <div id="chatBox" class="flex-1 overflow-y-auto space-y-3 mb-3 p-2 bg-slate-50 rounded text-sm">
+        <!-- 1. Messenger Private Inbox Section -->
+        <div id="privateChatSection" class="flex-1 flex flex-col overflow-hidden relative">
+          
+          <!-- Inbox List View -->
+          <div id="messengerInboxView" class="flex-1 flex flex-col overflow-y-auto p-2">
+            <h3 class="text-xs font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">Chats & Messages</h3>
+            <div id="privateChatList" class="space-y-1">
+              <p class="text-center text-slate-400 text-xs py-10">Private Chat စာရင်း မရှိသေးပါ။ Post များမှ Profile ကို နှိပ်၍ Direct Message စတင်နိုင်ပါသည်။</p>
+            </div>
+          </div>
+
+          <!-- Messenger Direct Chat Conversation View -->
+          <div id="messengerChatView" class="absolute inset-0 bg-white flex flex-col hidden z-10">
+            <!-- Chat Active Header -->
+            <div class="p-2.5 bg-slate-100 border-b flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <button id="backToInboxBtn" class="p-1 rounded-full hover:bg-slate-200 text-slate-700 text-sm font-bold">⬅️</button>
+                <img id="pmTargetImg" class="w-8 h-8 rounded-full object-cover border border-white shadow-sm">
+                <div>
+                  <h4 id="pmTargetName" class="font-bold text-xs text-slate-800 leading-tight"></h4>
+                  <span class="text-[9px] text-emerald-500 font-bold">● Active Now</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Messages Stream Area -->
+            <div id="pmMessagesBox" class="flex-1 overflow-y-auto space-y-2 p-3 bg-slate-50 text-xs">
+              <p class="text-center text-slate-400 text-[11px]">စကားစတင် ပြောဆိုပါ...</p>
+            </div>
+
+            <!-- Chat Message Form -->
+            <form id="pmForm" class="p-2 border-t bg-white flex gap-2">
+              <input type="text" id="pmInput" placeholder="Message စာရိုက်ပါ..." required class="flex-1 border p-2 rounded-full text-xs outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
+              <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-blue-700 transition">Send</button>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- 2. Public Chat Container -->
+        <div id="publicChatSection" class="hidden flex-1 flex flex-col overflow-hidden p-2">
+          <div id="chatBox" class="flex-1 overflow-y-auto space-y-3 mb-2 p-2 bg-slate-50 rounded text-sm">
             <p class="text-center text-slate-400 text-xs">စကားပြောဆိုမှု မရှိသေးပါ...</p>
           </div>
-          <form id="chatForm" class="flex gap-2">
+          <form id="chatForm" class="flex gap-2 pt-2 border-t">
             <input type="text" id="chatInput" placeholder="စကားပြောရန် စာရိုက်ပါ..." required class="flex-1 border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">ပို့မည်</button>
           </form>
         </div>
 
-        <!-- Private Chat Threads List -->
-        <div id="privateChatSection" class="hidden flex flex-col h-[420px]">
-          <div id="privateChatList" class="flex-1 overflow-y-auto space-y-2 p-1">
-            <p class="text-center text-slate-400 text-xs py-10">Private Chat စာရင်း မရှိသေးပါ။ Post များမှ User Profile ကို နှိပ်၍ Direct Message ပို့နိုင်ပါသည်။</p>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -238,28 +290,6 @@
 
   </main>
 
-  <!-- Private Chat Direct Modal -->
-  <div id="privateChatModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-4 flex flex-col h-[500px] relative">
-      <div class="flex items-center justify-between border-b pb-2 mb-2">
-        <div class="flex items-center gap-2">
-          <img id="pmTargetImg" class="w-7 h-7 rounded-full object-cover">
-          <span id="pmTargetName" class="font-bold text-xs text-slate-800"></span>
-        </div>
-        <button id="closePmModalBtn" class="text-slate-400 text-lg font-bold">✕</button>
-      </div>
-
-      <div id="pmMessagesBox" class="flex-1 overflow-y-auto space-y-2 p-2 bg-slate-50 rounded text-xs">
-        <p class="text-center text-slate-400 text-[11px]">စကားစတင် ပြောဆိုပါ...</p>
-      </div>
-
-      <form id="pmForm" class="flex gap-2 pt-2 border-t mt-2">
-        <input type="text" id="pmInput" placeholder="Private စာရိုက်ပါ..." required class="flex-1 border p-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500">
-        <button type="submit" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold">ပို့မည်</button>
-      </form>
-    </div>
-  </div>
-
   <!-- Edit Post Modal -->
   <div id="editPostModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-3 relative">
@@ -311,7 +341,8 @@
 
     db.enablePersistence().catch(err => console.log("Persistence error:", err));
 
-    // Admin Email List (Specify emails that have full admin rights)
+    // Security Settings: Admin Passcode / Password
+    const ADMIN_PASSCODE = "admin1234"; // သင့်စိတ်ကြိုက် Secret Admin Password ပြောင်းလဲနိုင်ပါသည်။
     const ADMIN_EMAILS = ["admin@kyawngar.com", "kyawngarpro@gmail.com"];
 
     let currentUser = null;
@@ -382,6 +413,33 @@
       });
     }
 
+    // Admin Passcode Security Handlers
+    const adminModal = document.getElementById('adminModal');
+    const adminLoginBtn = document.getElementById('adminLoginBtn');
+    const closeAdminModalBtn = document.getElementById('closeAdminModalBtn');
+    const submitAdminPasscodeBtn = document.getElementById('submitAdminPasscodeBtn');
+    const adminPasscodeInput = document.getElementById('adminPasscodeInput');
+
+    adminLoginBtn.addEventListener('click', () => {
+      adminPasscodeInput.value = "";
+      adminModal.classList.remove('hidden');
+    });
+
+    closeAdminModalBtn.addEventListener('click', () => adminModal.classList.add('hidden'));
+
+    submitAdminPasscodeBtn.addEventListener('click', () => {
+      const code = adminPasscodeInput.value.trim();
+      if (code === ADMIN_PASSCODE) {
+        isAdmin = true;
+        adminBadge.classList.remove('hidden');
+        adminModal.classList.add('hidden');
+        showToast("🔑 Admin Access အောင်မြင်စွာ ခွင့်ပြုလိုက်ပါပြီ");
+        renderAdsData(allAdsCache);
+      } else {
+        showToast("❌ Admin Password မှားယွင်းနေပါသည်");
+      }
+    });
+
     const authModal = document.getElementById('authModal');
     const openAuthModalBtn = document.getElementById('openAuthModalBtn');
     const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
@@ -411,7 +469,6 @@
         const res = await auth.signInWithPopup(provider);
         const user = res.user;
         
-        // Save user info to firestore
         await db.collection("users").doc(user.uid).set({
           displayName: user.displayName || user.email.split('@')[0],
           email: user.email,
@@ -467,6 +524,7 @@
 
     logoutBtn.addEventListener('click', () => {
       auth.signOut();
+      isAdmin = false;
       showToast("အကောင့်မှ ထွက်လိုက်ပါပြီ");
     });
 
@@ -504,9 +562,8 @@
         openAuthModalBtn.classList.add('hidden');
         userInfo.classList.remove('hidden');
         
-        // Admin Check
-        isAdmin = ADMIN_EMAILS.includes(user.email);
-        if (isAdmin) {
+        if (ADMIN_EMAILS.includes(user.email)) {
+          isAdmin = true;
           adminBadge.classList.remove('hidden');
         } else {
           adminBadge.classList.add('hidden');
@@ -665,12 +722,20 @@
         uploadBtn.disabled = false;
       }
     });
-    // Delete Post - Admin or Owner
+
+    // Delete Post - Admin with Security Code Check or Owner
     async function deletePost(id, authorUid) {
       if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
-      
+
       if (!isAdmin && currentUser.uid !== authorUid) {
         return showToast("မိမိတင်ထားသော ပို့စ်များကိုသာ ဖျက်ပိုင်ခွင့်ရှိပါသည်။");
+      }
+
+      if (isAdmin && currentUser.uid !== authorUid) {
+        const pass = prompt("Admin Security: ပို့စ်ဖျက်ရန် Admin Password ရိုက်ထည့်ပါ -");
+        if (pass !== ADMIN_PASSCODE) {
+          return showToast("❌ Password မှားယွင်းသောကြောင့် ဖျက်ခွင့်မရှိပါ");
+        }
       }
 
       if (confirm(isAdmin ? "Admin အဖြစ် ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?" : "ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?")) {
@@ -681,8 +746,7 @@
           showToast("ဖျက်ရာတွင် အမှားရှိပါသည်: " + err.message);
         }
       }
-    }
-
+  }
     // Edit Post Modal Trigger
     function openEditPostModal(id, title, desc) {
       document.getElementById('editPostId').value = id;
@@ -840,8 +904,8 @@
         }
 
         const authorPhoto = data.authorPhoto 
-          ? `<img src="${data.authorPhoto}" onclick="openPrivateChat('${data.authorUid}', '${data.authorName || 'User'}', '${data.authorPhoto}')" class="w-7 h-7 rounded-full object-cover cursor-pointer hover:opacity-80" title="Direct Message ပို့ရန် နှိပ်ပါ">` 
-          : `<div onclick="openPrivateChat('${data.authorUid}', '${data.authorName || 'User'}', '')" class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] cursor-pointer" title="Direct Message ပို့ရန် နှိပ်ပါ">👤</div>`;
+          ? `<img src="${data.authorPhoto}" onclick="openPrivateChat('${data.authorUid}', '${data.authorName || 'User'}', '${data.authorPhoto}')" class="w-7 h-7 rounded-full object-cover cursor-pointer hover:opacity-80" title="Messenger မှတစ်ဆင့် စာပို့ပါ">` 
+          : `<div onclick="openPrivateChat('${data.authorUid}', '${data.authorName || 'User'}', '')" class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] cursor-pointer" title="Messenger မှတစ်ဆင့် စာပို့ပါ">👤</div>`;
         
         const isOwner = currentUser && (currentUser.uid === data.authorUid);
         const canDelete = isAdmin || isOwner;
@@ -905,7 +969,7 @@
       if (window.tiktokEmbed) window.tiktokEmbed.load();
     }
 
-    // Public Chat System
+    // Public Group Chat
     document.getElementById('chatForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const input = document.getElementById('chatInput');
@@ -966,7 +1030,7 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     });
 
-    // Chat Tab Toggle (Public vs Private)
+    // Chat Tab Toggle (Private Messenger vs Public Group Chat)
     const showPublicChatBtn = document.getElementById('showPublicChatBtn');
     const showPrivateChatBtn = document.getElementById('showPrivateChatBtn');
     const publicChatSection = document.getElementById('publicChatSection');
@@ -975,20 +1039,20 @@
     showPublicChatBtn.addEventListener('click', () => {
       publicChatSection.classList.remove('hidden');
       privateChatSection.classList.add('hidden');
-      showPublicChatBtn.className = "flex-1 text-center font-bold text-xs py-1.5 border-b-2 border-blue-600 text-blue-600";
-      showPrivateChatBtn.className = "flex-1 text-center font-bold text-xs py-1.5 text-slate-500";
+      showPublicChatBtn.className = "flex-1 text-center font-bold text-xs py-2 rounded-lg bg-blue-600 text-white shadow-sm transition";
+      showPrivateChatBtn.className = "flex-1 text-center font-bold text-xs py-2 rounded-lg text-slate-600 hover:bg-slate-200 transition";
     });
 
     showPrivateChatBtn.addEventListener('click', () => {
-      if (!currentUser) return showToast("Private Messages အတွက် အကောင့်ဝင်ပါ!");
+      if (!currentUser) return showToast("Messenger သုံးရန် အကောင့်ဝင်ပါ!");
       publicChatSection.classList.add('hidden');
       privateChatSection.classList.remove('hidden');
-      showPrivateChatBtn.className = "flex-1 text-center font-bold text-xs py-1.5 border-b-2 border-blue-600 text-blue-600";
-      showPublicChatBtn.className = "flex-1 text-center font-bold text-xs py-1.5 text-slate-500";
+      showPrivateChatBtn.className = "flex-1 text-center font-bold text-xs py-2 rounded-lg bg-blue-600 text-white shadow-sm transition";
+      showPublicChatBtn.className = "flex-1 text-center font-bold text-xs py-2 rounded-lg text-slate-600 hover:bg-slate-200 transition";
       loadPrivateChatList();
     });
 
-    // Direct / Private Message System
+    // Messenger Direct Chat Logic
     function getChatRoomId(uid1, uid2) {
       return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
     }
@@ -1000,7 +1064,16 @@
       currentPmTargetUid = targetUid;
       document.getElementById('pmTargetName').innerText = targetName || 'User';
       document.getElementById('pmTargetImg').src = targetPhoto || 'https://via.placeholder.com/30';
-      document.getElementById('privateChatModal').classList.remove('hidden');
+      
+      // Open Fullscreen Chat View
+      document.getElementById('messengerChatView').classList.remove('hidden');
+
+      // Switch to Chat tab automatically if clicked from post
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+      document.getElementById('tab-chat').classList.remove('hidden');
+      navButtons.forEach(b => { b.classList.remove('text-blue-600'); b.classList.add('text-slate-500'); });
+      document.querySelector('[data-tab="chat"]').classList.remove('text-slate-500');
+      document.querySelector('[data-tab="chat"]').classList.add('text-blue-600');
 
       const roomId = getChatRoomId(currentUser.uid, targetUid);
       
@@ -1014,7 +1087,7 @@
             const isMe = data.senderUid === currentUser.uid;
             html += `
               <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} my-1">
-                <div class="p-2 rounded-xl text-xs max-w-[80%] ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border text-slate-800 rounded-tl-none'}">
+                <div class="p-2 rounded-2xl text-xs max-w-[80%] ${isMe ? 'bg-blue-600 text-white rounded-br-none shadow-sm' : 'bg-slate-200 text-slate-800 rounded-bl-none'}">
                   ${data.text}
                 </div>
               </div>
@@ -1026,8 +1099,8 @@
         });
     }
 
-    document.getElementById('closePmModalBtn').addEventListener('click', () => {
-      document.getElementById('privateChatModal').classList.add('hidden');
+    document.getElementById('backToInboxBtn').addEventListener('click', () => {
+      document.getElementById('messengerChatView').classList.add('hidden');
       if (pmUnsubscribe) pmUnsubscribe();
     });
 
@@ -1048,7 +1121,7 @@
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Save last thread info
+        // Threads list sync
         await db.collection("users").doc(currentUser.uid).collection("threads").doc(currentPmTargetUid).set({
           targetUid: currentPmTargetUid,
           lastMessage: text,
@@ -1067,7 +1140,7 @@
       }
     });
 
-    // Load Private Chat Threads List
+    // Load Private Inbox Threads List
     function loadPrivateChatList() {
       if (!currentUser) return;
 
@@ -1079,11 +1152,11 @@
           const targetData = targetUserDoc.exists ? targetUserDoc.data() : {};
           
           html += `
-            <div onclick="openPrivateChat('${thread.targetUid}', '${targetData.displayName || 'User'}', '${targetData.photoURL || ''}')" class="p-2 bg-white border rounded-xl flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition">
-              <img src="${targetData.photoURL || 'https://via.placeholder.com/35'}" class="w-9 h-9 rounded-full object-cover">
+            <div onclick="openPrivateChat('${thread.targetUid}', '${targetData.displayName || 'User'}', '${targetData.photoURL || ''}')" class="p-2.5 bg-white hover:bg-slate-100 rounded-xl flex items-center gap-3 cursor-pointer transition border border-slate-100">
+              <img src="${targetData.photoURL || 'https://via.placeholder.com/35'}" class="w-10 h-10 rounded-full object-cover border">
               <div class="flex-1 min-w-0">
-                <h4 class="font-bold text-xs text-slate-800">${targetData.displayName || 'User'}</h4>
-                <p class="text-[11px] text-slate-500 truncate">${thread.lastMessage || ''}</p>
+                <h4 class="font-bold text-xs text-slate-800 leading-tight">${targetData.displayName || 'User'}</h4>
+                <p class="text-[11px] text-slate-500 truncate mt-0.5">${thread.lastMessage || ''}</p>
               </div>
             </div>
           `;
