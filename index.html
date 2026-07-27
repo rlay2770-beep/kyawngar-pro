@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 
-  <title>KyawNgar Pro v6 Final</title>
+  <title>KyawNgar Pro</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script async src="https://www.tiktok.com/embed.js"></script>
@@ -24,6 +24,7 @@
       animation: spin-slow 5s linear infinite;
     }
 
+    /* Comment Drawer (အံဆွဲ ဘောက်) Dynamic Style */
     .comment-drawer {
       position: fixed;
       bottom: -100%;
@@ -66,16 +67,19 @@
 
   <!-- Header -->
   <header class="bg-blue-600 text-white p-3.5 shadow-md flex justify-between items-center sticky top-0 z-50">
-    <h1 class="text-lg font-bold flex items-center gap-1.5">🚀 KyawNgar Pro <span class="text-[10px] bg-blue-800 px-1.5 py-0.5 rounded-full">v6 Final</span></h1>
+    <h1 class="text-lg font-bold flex items-center gap-1.5">🚀 KyawNgar Pro</h1>
     
     <!-- Auth Container -->
     <div id="authContainer" class="flex items-center gap-1.5">
+      <button id="openTermsBtnHeader" onclick="openTermsModal()" class="text-xs text-blue-100 hover:underline mr-1 hidden sm:inline">စည်းကမ်းချက်များ</button>
+      
       <button id="openAuthModalBtn" class="bg-white text-blue-600 text-xs font-bold px-3 py-1.5 rounded-lg shadow flex items-center gap-1.5 hover:bg-slate-100 transition">
         <span>🔐 Login / Register</span>
       </button>
 
       <div id="userInfo" class="hidden flex items-center gap-2">
-        <div class="relative cursor-pointer" id="secretAdminTrigger" title="Profile ဓာတ်ပုံ">
+        <!-- Hidden Secret Admin Click Area (Profile Picture 5-Clicks) -->
+        <div class="relative cursor-pointer" id="secretAdminTrigger" title="Profile ဓာတ်ပုံ (Admin Mode အတွက် ၅ ချက်နှိပ်ပါ)">
           <img id="userImg" class="w-8 h-8 rounded-full border-2 border-white shadow object-cover">
         </div>
         
@@ -88,6 +92,49 @@
       </div>
     </div>
   </header>
+
+  <!-- Hidden Profile Photo Input -->
+  <input type="file" id="profileFileInput" accept="image/*" class="hidden">
+
+  <!-- Terms and Conditions Modal Popup -->
+  <div id="termsModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-5 space-y-3 relative max-h-[80vh] flex flex-col">
+      <button onclick="closeTermsModal()" class="absolute top-3 right-3 text-slate-400 text-lg font-bold hover:text-slate-600">✕</button>
+      <h3 class="text-base font-bold text-slate-800 border-b pb-2 flex items-center gap-2">📜 စည်းကမ်းချက်များနှင့် မူဝါဒများ</h3>
+      
+      <div class="text-xs text-slate-600 space-y-2.5 overflow-y-auto pr-1 flex-1 leading-relaxed">
+        <p class="font-semibold text-slate-800">၁။ အသုံးပြုမှုဆိုင်ရာ စည်းကမ်းများ</p>
+        <p>KyawNgar Pro ကို အသုံးပြုရာတွင် မဖွယ်မရာ စာသားများ၊ အမုန်းစကားများ၊ သတင်းတုများနှင့် မသမာသော နည်းလမ်းဖြင့် ငွေကြေးလိမ်လည်သည့် ကြော်ငြာများ တင်ခြင်းကို လုံးဝ ခွင့်မပြုပါ။</p>
+
+        <p class="font-semibold text-slate-800">၂။ မူပိုင်ခွင့်နှင့် ကိုယ်ရေးအချက်အလက်</p>
+        <p>အသုံးပြုသူများ၏ အချက်အလက်များကို လုံခြုံစွာ ထိန်းသိမ်းထားမည်ဖြစ်ပြီး အခြားသော ပြင်ပအဖွဲ့အစည်းများထံ အလွဲသုံးစား ရောင်းချခြင်း လုံးဝ ပြုလုပ်မည်မဟုတ်ပါ။</p>
+
+        <p class="font-semibold text-slate-800">၃။ ကြော်ငြာနှင့် ဝင်ငွေရရှိမှု မူဝါဒ</p>
+        <p>ဤ App/Website တွင် ပြသထားသော VIP ကြော်ငြာများနှင့် အခြားသော Sponsor ကြော်ငြာများသည် စီးပွားရေးလုပ်ငန်းရှင်များနှင့် အသိုင်းအဝိုင်း ချိတ်ဆက်ပေးရန်ဖြစ်ပြီး လိမ်လည်မှုများ ဖြစ်ပေါ်ပါက Admin မှ တာဝန်ယူမည်မဟုတ်ဘိုင်း စိစစ်ဖျက်ဆီးပိုင်ခွင့်ရှိသည်။</p>
+      </div>
+      
+      <button onclick="closeTermsModal()" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-blue-700 transition">
+        လက်ခံပါသည်
+      </button>
+    </div>
+  </div>
+
+  <!-- Admin Passcode Modal Popup -->
+  <div id="adminModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-4 relative">
+      <button id="closeAdminModalBtn" class="absolute top-3 right-3 text-slate-400 text-lg font-bold">✕</button>
+      <h3 class="text-base font-bold text-slate-800 text-center">🛡️ Admin Security Access</h3>
+      <p class="text-xs text-slate-500 text-center">Admin စနစ်သို့ ဝင်ရောက်ရန် လျှို့ဝှက် Password ကို ဖြည့်သွင်းပါ။</p>
+      
+      <div>
+        <input type="password" id="adminPasscodeInput" placeholder="Admin Passcode ရိုက်ပါ..." class="w-full border p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500 text-center font-bold tracking-widest">
+      </div>
+      
+      <button id="submitAdminPasscodeBtn" class="w-full bg-amber-500 text-slate-900 font-bold py-2.5 rounded-lg text-xs hover:bg-amber-400 transition shadow">
+        Admin Mode ဖွင့်မည်
+      </button>
+    </div>
+  </div>
 
   <!-- Login/Register Modal Popup -->
   <div id="authModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
@@ -127,6 +174,10 @@
         </div>
       </form>
 
+      <div class="text-center pt-2">
+        <button onclick="openTermsModal()" class="text-[10px] text-slate-400 underline">စည်းကမ်းချက်များနှင့် မူဝါဒများ ဖတ်ရှုရန်</button>
+      </div>
+
       <div id="authStatus" class="text-center text-[11px] hidden p-2 rounded"></div>
     </div>
   </div>
@@ -148,6 +199,7 @@
 
   <!-- Main Display Container -->
   <main class="flex-1 max-w-md w-full mx-auto p-4 space-y-4">
+
     <!-- Tab 1: Feed -->
     <div id="tab-feed" class="tab-content space-y-4">
       <div id="feedAds" class="space-y-4">
@@ -172,20 +224,27 @@
     <!-- Tab 4: Full Messenger Chat System -->
     <div id="tab-chat" class="tab-content space-y-4 hidden">
       <div class="bg-white rounded-2xl shadow border overflow-hidden flex flex-col h-[520px]">
+        
+        <!-- Messenger Top Switcher Bar -->
         <div class="flex border-b bg-slate-50 p-2 gap-1" id="chatCategoryHeader">
           <button id="showPrivateChatBtn" class="flex-1 text-center font-bold text-xs py-2 rounded-lg bg-blue-600 text-white shadow-sm transition">⚡ Messenger</button>
           <button id="showPublicChatBtn" class="flex-1 text-center font-bold text-xs py-2 rounded-lg text-slate-600 hover:bg-slate-200 transition">💬 Public Group</button>
         </div>
 
+        <!-- 1. Messenger Private Inbox Section -->
         <div id="privateChatSection" class="flex-1 flex flex-col overflow-hidden relative">
+          
+          <!-- Inbox List View -->
           <div id="messengerInboxView" class="flex-1 flex flex-col overflow-y-auto p-2">
             <h3 class="text-xs font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">Chats & Messages</h3>
             <div id="privateChatList" class="space-y-1">
-              <p class="text-center text-slate-400 text-xs py-10">Private Chat စာရင်း မရှိသေးပါ။</p>
+              <p class="text-center text-slate-400 text-xs py-10">Private Chat စာရင်း မရှိသေးပါ။ Post များမှ Profile ကို နှိပ်၍ Direct Message စတင်နိုင်ပါသည်။</p>
             </div>
           </div>
 
+          <!-- Messenger Direct Chat Conversation View -->
           <div id="messengerChatView" class="absolute inset-0 bg-white flex flex-col hidden z-10">
+            <!-- Chat Active Header -->
             <div class="p-2.5 bg-slate-100 border-b flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <button id="backToInboxBtn" class="p-1 rounded-full hover:bg-slate-200 text-slate-700 text-sm font-bold">⬅️</button>
@@ -197,17 +256,21 @@
               </div>
             </div>
 
+            <!-- Messages Stream Area -->
             <div id="pmMessagesBox" class="flex-1 overflow-y-auto space-y-2 p-3 bg-slate-50 text-xs">
               <p class="text-center text-slate-400 text-[11px]">စကားစတင် ပြောဆိုပါ...</p>
             </div>
 
+            <!-- Chat Message Form -->
             <form id="pmForm" class="p-2 border-t bg-white flex gap-2">
               <input type="text" id="pmInput" placeholder="Message စာရိုက်ပါ..." required class="flex-1 border p-2 rounded-full text-xs outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
               <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-blue-700 transition">Send</button>
             </form>
           </div>
+
         </div>
 
+        <!-- 2. Public Chat Container -->
         <div id="publicChatSection" class="hidden flex-1 flex flex-col overflow-hidden p-2">
           <div id="chatBox" class="flex-1 overflow-y-auto space-y-3 mb-2 p-2 bg-slate-50 rounded text-sm">
             <p class="text-center text-slate-400 text-xs">စကားပြောဆိုမှု မရှိသေးပါ...</p>
@@ -217,6 +280,7 @@
             <button type="submit" id="chatSubmitBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">ပို့မည်</button>
           </form>
         </div>
+
       </div>
     </div>
 
@@ -259,6 +323,7 @@
             </div>
           </div>
 
+          <!-- Media Attachments Section -->
           <div class="space-y-2 pt-2 border-t">
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">🖼️ ဓာတ်ပုံ ရွေးချယ်ရန်</label>
@@ -282,18 +347,24 @@
         <div id="uploadStatus" class="text-center text-xs hidden p-2 rounded"></div>
       </div>
     </div>
+
   </main>
 
   <!-- Global Comment Drawer Component & Overlay -->
   <div id="drawerOverlay" class="drawer-overlay" onclick="closeCommentDrawer()"></div>
   <div id="globalCommentDrawer" class="comment-drawer max-w-md mx-auto">
+    <!-- Drawer Header -->
     <div class="p-3 border-b flex justify-between items-center bg-slate-50 rounded-t-2xl">
       <h3 class="text-xs font-bold text-slate-800 flex items-center gap-1">💬 ကွန်မန့်များ</h3>
       <button onclick="closeCommentDrawer()" class="text-slate-400 font-bold text-base hover:text-slate-600 px-2">✕</button>
     </div>
     
-    <div id="drawerCommentList" class="flex-1 overflow-y-auto p-3 space-y-2 max-h-[50vh]"></div>
+    <!-- Drawer Content (Comments Stream) -->
+    <div id="drawerCommentList" class="flex-1 overflow-y-auto p-3 space-y-2 max-h-[50vh]">
+      <!-- Dynamic Comments will render here -->
+    </div>
 
+    <!-- Drawer Input Form (Comment Post Area) -->
     <form id="drawerCommentForm" class="p-2 border-t bg-white flex gap-1.5">
       <input type="text" id="drawerCommentInput" placeholder="ကွန်မန့် ရေးပါ..." required class="flex-1 border p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
       <button type="submit" class="bg-blue-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition">ပို့မည်</button>
@@ -351,6 +422,7 @@
 
     db.enablePersistence().catch(err => console.log("Persistence error:", err));
 
+    const ADMIN_PASSCODE = "478478"; 
     const ADMIN_EMAILS = ["admin@kyawngar.com", "kyawngarpro@gmail.com"];
 
     let currentUser = null;
@@ -364,8 +436,18 @@
 
     let currentPmTargetUid = null;
     let pmUnsubscribe = null;
-    let activeDrawerPostId = null;
 
+    let activeDrawerPostId = null; // Active Drawer Tracking
+
+    // Terms Modal Control
+    function openTermsModal() {
+      document.getElementById('termsModal').classList.remove('hidden');
+    }
+    function closeTermsModal() {
+      document.getElementById('termsModal').classList.add('hidden');
+    }
+
+    // XSS Security: Strict Text Sanitization (HTML Encoding Function)
     function escapeHTML(str) {
       if (!str) return '';
       return String(str)
@@ -376,6 +458,7 @@
         .replace(/'/g, "&#039;");
     }
 
+    // Security Helper: Escape quotes for inline JS attributes
     function escapeJsParam(str) {
       if (!str) return '';
       return String(str)
@@ -441,6 +524,44 @@
       });
     }
 
+    // Secret Admin Mode Trigger (Profile Image 5-Clicks)
+    let profileClickCount = 0;
+    let profileClickTimer = null;
+    const secretAdminTrigger = document.getElementById('secretAdminTrigger');
+    const adminModal = document.getElementById('adminModal');
+    const closeAdminModalBtn = document.getElementById('closeAdminModalBtn');
+    const submitAdminPasscodeBtn = document.getElementById('submitAdminPasscodeBtn');
+    const adminPasscodeInput = document.getElementById('adminPasscodeInput');
+
+    secretAdminTrigger.addEventListener('click', () => {
+      profileClickCount++;
+      clearTimeout(profileClickTimer);
+
+      profileClickTimer = setTimeout(() => {
+        profileClickCount = 0;
+      }, 2000);
+
+      if (profileClickCount >= 5) {
+        profileClickCount = 0;
+        adminPasscodeInput.value = "";
+        adminModal.classList.remove('hidden');
+      }
+    });
+
+    closeAdminModalBtn.addEventListener('click', () => adminModal.classList.add('hidden'));
+
+    submitAdminPasscodeBtn.addEventListener('click', () => {
+      const code = adminPasscodeInput.value.trim();
+      if (code === ADMIN_PASSCODE) {
+        isAdmin = true;
+        adminBadge.classList.remove('hidden');
+        adminModal.classList.add('hidden');
+        showToast("🔑 Admin Access အောင်မြင်စွာ ခွင့်ပြုလိုက်ပါပြီ");
+        renderAdsData(allAdsCache);
+      } else {
+        showToast("❌ Admin Password မှားယွင်းနေပါသည်");
+      }
+    });
     const authModal = document.getElementById('authModal');
     const openAuthModalBtn = document.getElementById('openAuthModalBtn');
     const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
@@ -528,6 +649,8 @@
       isAdmin = false;
       showToast("အကောင့်မှ ထွက်လိုက်ပါပြီ");
     });
+
+    const profileFileInput = document.getElementById('profileFileInput');
 
     auth.onAuthStateChanged(async (user) => {
       currentUser = user;
@@ -621,6 +744,8 @@
         renderAdsData(allAdsCache);
       });
     });
+
+    // Search Box Functionality
     const searchInput = document.getElementById('searchInput');
     const clearSearchBtn = document.getElementById('clearSearchBtn');
 
@@ -647,6 +772,7 @@
       return match ? match[1] : null;
     }
 
+    // Upload Form Handling
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!currentUser) return showToast("Login အရင်ဝင်ပါ!");
@@ -781,6 +907,8 @@
       }
     }
 
+    // --- Bottom Sheet Comment Drawer System ---
+
     function openCommentDrawer(postId) {
       activeDrawerPostId = postId;
       document.getElementById('globalCommentDrawer').classList.add('open');
@@ -804,7 +932,8 @@
       if (comments.length === 0) {
         listContainer.innerHTML = '<p class="text-center text-slate-400 text-xs py-8">ကွန်မန့် မရှိသေးပါ။ စတင် ရေးသားပါ...</p>';
         return;
-    }
+      }
+
       let html = comments.map(c => {
         const cId = c.id || ('c_' + Math.random().toString(36).substr(2, 4));
         const canDeleteC = isAdmin || (currentUser && currentUser.uid === c.userUid);
@@ -846,6 +975,7 @@
 
             ${repliesList ? `<div class="pl-3 space-y-1">${repliesList}</div>` : ''}
 
+            <!-- Hidden Reply Input Box -->
             <div id="reply-box-${escapeHTML(postId)}-${escapeHTML(cId)}" class="hidden pt-1.5 pl-3">
               <form onsubmit="addReply('${escapeJsParam(postId)}', '${escapeJsParam(cId)}', event)" class="flex gap-1">
                 <input type="text" placeholder="Reply ပြန်ရန် စာရိုက်ပါ..." class="flex-1 border p-1 rounded-lg text-[10px] outline-none focus:ring-1 focus:ring-blue-500 bg-white">
@@ -857,8 +987,8 @@
       }).join('');
 
       listContainer.innerHTML = html;
-    }
-
+  }
+  // Add Main Comment from Drawer
     document.getElementById('drawerCommentForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!currentUser) return showToast("Comment ရေးရန် အကောင့်ဝင်ပါ!");
@@ -892,11 +1022,15 @@
       }
     });
 
+    // Toggle Reply Box Inside Drawer
     function toggleReplyBox(postId, commentId) {
       const replyBox = document.getElementById(`reply-box-${postId}-${commentId}`);
-      if (replyBox) replyBox.classList.toggle('hidden');
+      if (replyBox) {
+        replyBox.classList.toggle('hidden');
+      }
     }
 
+    // Add Reply & Close Drawer Automatically
     async function addReply(postId, commentId, e) {
       e.preventDefault();
       if (!currentUser) return showToast("Reply ပြန်ရန် အကောင့်ဝင်ပါ!");
@@ -940,6 +1074,7 @@
       }
     }
 
+    // Delete Main Comment or Nested Reply
     async function deleteCommentOrReply(postId, commentId, replyId = null, authorUid) {
       if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
 
@@ -1005,7 +1140,7 @@
         return matchesSearch && matchesTag;
       });
 
-      filtered.forEach((data) => {
+      filtered.forEach((data, index) => {
         const cat = data.category || 'feed';
         const likes = data.likes || [];
         const comments = data.comments || [];
@@ -1065,7 +1200,8 @@
                 🔗 ${escapeHTML(data.videoUrl)}
               </a>`;
           }
-    }
+        }
+
         const authorPhoto = data.authorPhoto 
           ? `<img src="${escapeHTML(data.authorPhoto)}" onclick="openPrivateChat('${escapeJsParam(data.authorUid)}', '${escapeJsParam(data.authorName || 'User')}', '${escapeJsParam(data.authorPhoto)}')" class="w-7 h-7 rounded-full object-cover cursor-pointer hover:opacity-80" title="Messenger မှတစ်ဆင့် စာပို့ပါ">` 
           : `<div onclick="openPrivateChat('${escapeJsParam(data.authorUid)}', '${escapeJsParam(data.authorName || 'User')}', '')" class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] cursor-pointer" title="Messenger မှတစ်ဆင့် စာပို့ပါ">👤</div>`;
@@ -1108,8 +1244,21 @@
             </div>
           </div>
         `;
+        // Monetization Readiness Banner Integration (Every 3 Posts Insert Banner Frame)
+        const adNetworkBannerUnit = `
+          <div class="bg-amber-50/60 border border-amber-200/70 rounded-xl p-2.5 text-center my-2 shadow-sm">
+            <span class="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider inline-block mb-1">Sponsored Ad / Monetization</span>
+            <div id="monetization-ad-unit-${index}" class="text-xs text-slate-500 min-h-[50px] flex items-center justify-center border border-dashed border-amber-300 rounded bg-white">
+              <!-- AdSense / AdMob / External Ad Network Code များကို ဤနေရာတွင် ထည့်သွင်းနိုင်သည် -->
+              📢 ဝင်ငွေရရှိမည့် စပွန်ဆာ ကြော်ငြာနေရာ
+            </div>
+          </div>
+        `;
 
-        if (cat === 'feed') feedHtml += card;
+        if (cat === 'feed') {
+          feedHtml += card;
+          if ((index + 1) % 3 === 0) feedHtml += adNetworkBannerUnit;
+        }
         if (cat === 'reels') reelsHtml += card;
         if (cat === 'ads') paidHtml += card;
       });
@@ -1121,6 +1270,7 @@
       if (window.tiktokEmbed) window.tiktokEmbed.load();
     }
 
+    // Public Chat Message Deletion
     async function deleteChatMessage(chatId, senderUid) {
       if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
 
@@ -1337,3 +1487,4 @@
   </script>
 </body>
 </html>
+    
