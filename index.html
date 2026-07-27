@@ -411,7 +411,6 @@
     function audioToBase64(file) {
       return new Promise((resolve, reject) => {
         if (!file || !file.type.startsWith('audio/')) return resolve(null);
-        // Size threshold ကို 1MB အထိ မြှင့်တင်ပေးထားပါသည်
         if (file.size > 1048576) {
           return reject(new Error("Audio ဖိုင်အမျိုးအစား လိုင်းဆွဲအား သက်သာစေရန် 1MB အောက်သာ လက်ခံပါသည်။"));
         }
@@ -589,7 +588,6 @@
         uploadBtn.className = "w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg text-sm hover:bg-blue-700 transition cursor-pointer";
         uploadBtn.innerText = "တင်မည်";
 
-        // Enable Chat Input
         if (chatInput) {
           chatInput.disabled = false;
           chatInput.placeholder = "စကားပြောရန် စာရိုက်ပါ...";
@@ -607,7 +605,6 @@
         currentUserName = "";
         isAdmin = false;
 
-        // Disable Chat Input when Not Logged In
         if (chatInput) {
           chatInput.disabled = true;
           chatInput.placeholder = "🔒 စကားပြောရန် Login အရင်ဝင်ပါ...";
@@ -616,7 +613,6 @@
       }
       renderAdsData(allAdsCache);
     });
-
     const navButtons = document.querySelectorAll('.nav-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
@@ -644,6 +640,22 @@
         renderAdsData(allAdsCache);
       });
     });
+
+    // Search Box Functionality
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+    searchInput.addEventListener('input', (e) => {
+      currentSearchQuery = e.target.value.trim().toLowerCase();
+      renderAdsData(allAdsCache);
+    });
+
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = "";
+      currentSearchQuery = "";
+      renderAdsData(allAdsCache);
+    });
+
     function getYoutubeId(url) {
       if (!url) return null;
       const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
@@ -656,7 +668,7 @@
       return match ? match[1] : null;
     }
 
-    // Upload Form Handling (Audio Process အမှားမဖြစ်အောင် အဆင့်မြှင့်ထားသည်)
+    // Upload Form Handling
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!currentUser) return showToast("Login အရင်ဝင်ပါ!");
@@ -791,6 +803,9 @@
       }
     }
 
+    // New Features: Advanced Comments & Reply System
+
+    // Add main comment to post
     async function addComment(postId, e) {
       e.preventDefault();
       if (!currentUser) return showToast("Comment ရေးရန် အကောင့်ဝင်ပါ!");
@@ -798,20 +813,116 @@
       const text = input.value.trim();
       if (!text) return;
 
+      const commentId = "c_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4);
+
       const commentObj = {
+        id: commentId,
+        userUid: currentUser.uid,
         userName: currentUserName,
         userPhoto: currentUserCustomPhoto || "",
         text: text,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        replies: []
       };
 
-      await db.collection("ads").doc(postId).update({
-        comments: firebase.firestore.FieldValue.arrayUnion(commentObj)
-      });
-      input.value = "";
+      try {
+        await db.collection("ads").doc(postId).update({
+          comments: firebase.firestore.FieldValue.arrayUnion(commentObj)
+        });
+        input.value = ""; // Clear input box
+      } catch (err) {
+        showToast("Comment ပို့ရာတွင် အမှားရှိပါသည်: " + err.message);
+      }
     }
 
-    function sharePost(title, url) {
+    // Toggle Reply Box UI
+    function toggleReplyBox(postId, commentId) {
+      const replyBox = document.getElementById(`reply-box-${postId}-${commentId}`);
+      if (replyBox) {
+        replyBox.classList.toggle('hidden');
+      }
+    }
+
+    // Add Reply to a specific Comment
+    async function addReply(postId, commentId, e) {
+      e.preventDefault();
+      if (!currentUser) return showToast("Reply ပြန်ရန် အကောင့်ဝင်ပါ!");
+      const input = e.target.querySelector('input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      try {
+        const postRef = db.collection("ads").doc(postId);
+        const doc = await postRef.get();
+        if (!doc.exists) return;
+
+        let comments = doc.data().comments || [];
+        const replyObj = {
+          id: "r_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
+          userUid: currentUser.uid,
+          userName: currentUserName,
+          userPhoto: currentUserCustomPhoto || "",
+          text: text,
+          createdAt: new Date().toISOString()
+        };
+
+        let updated = false;
+        comments = comments.map(c => {
+          if (c.id === commentId) {
+            c.replies = c.replies || [];
+            c.replies.push(replyObj);
+            updated = true;
+          }
+          return c;
+        });
+
+        if (updated) {
+          await postRef.update({ comments: comments });
+          input.value = ""; // Clear Reply Box Input
+        }
+      } catch (err) {
+        showToast("Reply ပို့ရာတွင် အမှားရှိပါသည်: " + err.message);
+      }
+    }
+
+    // Delete Main Comment or Nested Reply
+    async function deleteCommentOrReply(postId, commentId, replyId = null, authorUid) {
+      if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
+
+      const isOwner = currentUser.uid === authorUid;
+      if (!isAdmin && !isOwner) {
+        return showToast("မိမိရေးထားသော Comment များကိုသာ ဖျက်ခွင့်ရှိပါသည်။");
+      }
+
+      if (!confirm("ဒီ Comment/Reply ကို ဖျက်ရန် သေချာပါသလား?")) return;
+
+      try {
+        const postRef = db.collection("ads").doc(postId);
+        const doc = await postRef.get();
+        if (!doc.exists) return;
+
+        let comments = doc.data().comments || [];
+
+        if (replyId) {
+          // Delete nested reply
+          comments = comments.map(c => {
+            if (c.id === commentId && c.replies) {
+              c.replies = c.replies.filter(r => r.id !== replyId);
+            }
+            return c;
+          });
+        } else {
+          // Delete main comment
+          comments = comments.filter(c => c.id !== commentId);
+        }
+
+        await postRef.update({ comments: comments });
+        showToast("ဖျက်ပြီးပါပြီ!");
+      } catch (err) {
+        showToast("ဖျက်ရာတွင် အမှားရှိပါသည်: " + err.message);
+      }
+  }
+  function sharePost(title, url) {
       if (navigator.share) {
         navigator.share({ title: title, url: url || window.location.href });
       } else {
@@ -910,12 +1021,60 @@
         const canDelete = isAdmin || isOwner;
         const canEdit = isOwner;
 
-        let commentsList = comments.slice(-2).map(c => `
-          <div class="text-[11px] bg-slate-100 p-1.5 rounded flex items-start gap-1.5">
-            <img src="${c.userPhoto || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full mt-0.5 object-cover">
-            <div><span class="font-bold text-slate-700">${escapeHTML(c.userName)}:</span> ${escapeHTML(c.text)}</div>
-          </div>
-        `).join('');
+        // Comments and Nested Replies Generation
+        let commentsList = comments.map(c => {
+          const cId = c.id || ('c_' + Math.random().toString(36).substr(2, 4));
+          const canDeleteC = isAdmin || (currentUser && currentUser.uid === c.userUid);
+          const replies = c.replies || [];
+
+          let repliesList = replies.map(r => {
+            const rId = r.id || ('r_' + Math.random().toString(36).substr(2, 4));
+            const canDeleteR = isAdmin || (currentUser && currentUser.uid === r.userUid);
+
+            return `
+              <div class="text-[10px] bg-slate-200/60 p-1.5 rounded-lg flex items-start justify-between gap-1 mt-1 border-l-2 border-blue-400">
+                <div class="flex items-start gap-1.5">
+                  <img src="${r.userPhoto || 'https://via.placeholder.com/20'}" class="w-3.5 h-3.5 rounded-full mt-0.5 object-cover">
+                  <div>
+                    <span class="font-bold text-slate-800">${escapeHTML(r.userName)}:</span> 
+                    <span class="text-slate-700">${escapeHTML(r.text)}</span>
+                  </div>
+                </div>
+                ${canDeleteR ? `<button onclick="deleteCommentOrReply('${data.id}', '${cId}', '${rId}', '${r.userUid}')" class="text-rose-500 hover:underline text-[9px] font-bold">🗑️</button>` : ''}
+              </div>
+            `;
+          }).join('');
+
+          return `
+            <div class="text-[11px] bg-slate-100 p-2 rounded-xl space-y-1">
+              <div class="flex items-start justify-between gap-1">
+                <div class="flex items-start gap-1.5">
+                  <img src="${c.userPhoto || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full mt-0.5 object-cover">
+                  <div>
+                    <span class="font-bold text-slate-800">${escapeHTML(c.userName)}:</span> 
+                    <span class="text-slate-700">${escapeHTML(c.text)}</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button onclick="toggleReplyBox('${data.id}', '${cId}')" class="text-[10px] text-blue-600 font-semibold hover:underline">💬 Reply</button>
+                  ${canDeleteC ? `<button onclick="deleteCommentOrReply('${data.id}', '${cId}', null, '${c.userUid}')" class="text-rose-500 hover:underline text-[10px] font-bold">🗑️</button>` : ''}
+                </div>
+              </div>
+
+              ${repliesList ? `<div class="pl-3 space-y-1">${repliesList}</div>` : ''}
+
+              <!-- Hidden Reply Input Box -->
+              <div id="reply-box-${data.id}-${cId}" class="hidden pt-1.5 pl-3">
+                <form onsubmit="addReply('${data.id}', '${cId}', event)" class="flex gap-1">
+                  <input type="text" placeholder="Reply ပြန်ရန် စာရိုက်ပါ..." class="flex-1 border p-1 rounded-lg text-[10px] outline-none focus:ring-1 focus:ring-blue-500 bg-white">
+                  <button type="submit" class="bg-blue-600 text-white px-2 py-0.5 rounded-lg text-[10px] font-semibold">ပို့</button>
+                </form>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        const totalCommentCount = comments.reduce((acc, curr) => acc + 1 + (curr.replies ? curr.replies.length : 0), 0);
 
         const card = `
           <div class="bg-white border rounded-xl p-3 shadow-sm space-y-2">
@@ -942,11 +1101,11 @@
               <button onclick="toggleLike('${data.id}', ${JSON.stringify(likes)})" class="flex items-center gap-1 ${isLiked ? 'text-rose-500 font-bold' : ''}">
                 ${isLiked ? '❤️' : '🤍'} <span>${likes.length}</span>
               </button>
-              <button class="flex items-center gap-1">💬 <span>${comments.length}</span></button>
+              <button class="flex items-center gap-1">💬 <span>${totalCommentCount}</span></button>
               <button onclick="sharePost('${escapeHTML(data.title)}', '${data.videoUrl || data.imageUrl || ''}')" class="flex items-center gap-1 text-blue-600">↪️ ရှယ်မည်</button>
             </div>
 
-            <div class="space-y-1.5">
+            <div class="space-y-1.5 pt-1">
               ${commentsList}
               <form onsubmit="addComment('${data.id}', event)" class="flex gap-1.5 pt-1">
                 <input type="text" placeholder="ကွန်မန့်ရေးရန်..." class="flex-1 border p-1.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500">
@@ -968,12 +1127,11 @@
       if (window.tiktokEmbed) window.tiktokEmbed.load();
     }
 
-    // Public Chat စာဖျက်ရန် Function (Admin က အကုန်ဖျက်နိုင်မည်)
+    // Public Chat Message Deletion
     async function deleteChatMessage(chatId, senderUid) {
       if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
 
       const isOwner = currentUser.uid === senderUid;
-      
       if (!isAdmin && !isOwner) {
         return showToast("Admin မဟုတ်ပါက မိမိစာများကိုသာ ဖျက်နိုင်ပါမည်။");
       }
