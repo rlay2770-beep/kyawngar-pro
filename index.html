@@ -361,7 +361,7 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation Bar -->
+   <!-- Bottom Navigation Bar -->
   <nav class="bg-white border-t fixed bottom-0 left-0 right-0 flex justify-around py-2 shadow-lg z-50 text-[11px] font-semibold text-slate-500">
     <button type="button" data-tab="feed" class="nav-btn text-blue-600 flex flex-col items-center flex-1"><span>📰</span>သတင်းစင်</button>
     <button type="button" data-tab="reels" class="nav-btn flex flex-col items-center flex-1"><span>🎬</span>Reels</button>
@@ -410,7 +410,7 @@
 
     let activeDrawerPostId = null; // Active Drawer Tracking
 
-    // Comment Box Security: Safe Text Sanitization (HTML Encoding Function)
+    // XSS Security: Strict Text Sanitization (HTML Encoding Function)
     function escapeHTML(str) {
       if (!str) return '';
       return String(str)
@@ -419,6 +419,17 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+    }
+
+    // Security Helper: Escape quotes for inline JS attributes
+    function escapeJsParam(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r');
     }
 
     function showToast(msg) {
@@ -463,7 +474,6 @@
       });
     }
 
-    // Audio File ကို Base64 ပြောင်းလဲပေးသည့် ပြင်ဆင်ပြီး Function
     function audioToBase64(file) {
       return new Promise((resolve, reject) => {
         if (!file || !file.type.startsWith('audio/')) return resolve(null);
@@ -558,6 +568,7 @@
         showAuthStatus("Google Login အမှား: " + err.message, true);
       }
     });
+
     emailLoginBtn.addEventListener('click', async () => {
       const email = document.getElementById('emailInput').value.trim();
       const password = document.getElementById('passwordInput').value.trim();
@@ -816,6 +827,7 @@
         }
       }
     }
+
     function openEditPostModal(id, title, desc) {
       document.getElementById('editPostId').value = id;
       document.getElementById('editTitle').value = title;
@@ -846,7 +858,6 @@
         showToast("ပြင်ဆင်ရာတွင် အမှားရှိပါသည်: " + err.message);
       }
     });
-
     async function toggleLike(postId, likesArray) {
       if (!currentUser) return showToast("Like ပေးရန် အကောင့်ဝင်ပါ!");
       const postRef = db.collection("ads").doc(postId);
@@ -898,13 +909,13 @@
           return `
             <div class="text-[10px] bg-slate-200/60 p-1.5 rounded-lg flex items-start justify-between gap-1 mt-1 border-l-2 border-blue-400">
               <div class="flex items-start gap-1.5">
-                <img src="${r.userPhoto || 'https://via.placeholder.com/20'}" class="w-3.5 h-3.5 rounded-full mt-0.5 object-cover">
+                <img src="${escapeHTML(r.userPhoto) || 'https://via.placeholder.com/20'}" class="w-3.5 h-3.5 rounded-full mt-0.5 object-cover">
                 <div>
                   <span class="font-bold text-slate-800">${escapeHTML(r.userName)}:</span> 
                   <span class="text-slate-700">${escapeHTML(r.text)}</span>
                 </div>
               </div>
-              ${canDeleteR ? `<button onclick="deleteCommentOrReply('${postId}', '${cId}', '${rId}', '${r.userUid}')" class="text-rose-500 hover:underline text-[9px] font-bold">🗑️</button>` : ''}
+              ${canDeleteR ? `<button onclick="deleteCommentOrReply('${escapeJsParam(postId)}', '${escapeJsParam(cId)}', '${escapeJsParam(rId)}', '${escapeJsParam(r.userUid)}')" class="text-rose-500 hover:underline text-[9px] font-bold">🗑️</button>` : ''}
             </div>
           `;
         }).join('');
@@ -913,23 +924,23 @@
           <div class="text-[11px] bg-slate-100 p-2 rounded-xl space-y-1">
             <div class="flex items-start justify-between gap-1">
               <div class="flex items-start gap-1.5">
-                <img src="${c.userPhoto || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full mt-0.5 object-cover">
+                <img src="${escapeHTML(c.userPhoto) || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full mt-0.5 object-cover">
                 <div>
                   <span class="font-bold text-slate-800">${escapeHTML(c.userName)}:</span> 
                   <span class="text-slate-700">${escapeHTML(c.text)}</span>
                 </div>
               </div>
               <div class="flex items-center gap-1.5">
-                <button onclick="toggleReplyBox('${postId}', '${cId}')" class="text-[10px] text-blue-600 font-semibold hover:underline">💬 Reply</button>
-                ${canDeleteC ? `<button onclick="deleteCommentOrReply('${postId}', '${cId}', null, '${c.userUid}')" class="text-rose-500 hover:underline text-[10px] font-bold">🗑️</button>` : ''}
+                <button onclick="toggleReplyBox('${escapeJsParam(postId)}', '${escapeJsParam(cId)}')" class="text-[10px] text-blue-600 font-semibold hover:underline">💬 Reply</button>
+                ${canDeleteC ? `<button onclick="deleteCommentOrReply('${escapeJsParam(postId)}', '${escapeJsParam(cId)}', null, '${escapeJsParam(c.userUid)}')" class="text-rose-500 hover:underline text-[10px] font-bold">🗑️</button>` : ''}
               </div>
             </div>
 
             ${repliesList ? `<div class="pl-3 space-y-1">${repliesList}</div>` : ''}
 
             <!-- Hidden Reply Input Box -->
-            <div id="reply-box-${postId}-${cId}" class="hidden pt-1.5 pl-3">
-              <form onsubmit="addReply('${postId}', '${cId}', event)" class="flex gap-1">
+            <div id="reply-box-${escapeHTML(postId)}-${escapeHTML(cId)}" class="hidden pt-1.5 pl-3">
+              <form onsubmit="addReply('${escapeJsParam(postId)}', '${escapeJsParam(cId)}', event)" class="flex gap-1">
                 <input type="text" placeholder="Reply ပြန်ရန် စာရိုက်ပါ..." class="flex-1 border p-1 rounded-lg text-[10px] outline-none focus:ring-1 focus:ring-blue-500 bg-white">
                 <button type="submit" class="bg-blue-600 text-white px-2 py-0.5 rounded-lg text-[10px] font-semibold">ပို့</button>
               </form>
@@ -968,7 +979,7 @@
           comments: firebase.firestore.FieldValue.arrayUnion(commentObj)
         });
         input.value = ""; 
-        closeCommentDrawer(); // ကွန်မန့် ပေးပြီးပါက အံဆွဲ အလိုအလျောက် ပြန်ဝင်သွားမည်
+        closeCommentDrawer();
         showToast("ကွန်မန့် ပို့ပြီးပါပြီ!");
       } catch (err) {
         showToast("Comment ပို့ရာတွင် အမှားရှိပါသည်: " + err.message);
@@ -1019,7 +1030,7 @@
         if (updated) {
           await postRef.update({ comments: comments });
           input.value = "";
-          closeCommentDrawer(); // Reply ပို့ပြီးပါက အံဆွဲ အလိုအလျောက် ပြန်ဝင်သွားမည်
+          closeCommentDrawer();
           showToast("Reply ပို့ပြီးပါပြီ!");
         }
       } catch (err) {
@@ -1080,8 +1091,7 @@
       renderAdsData(allAdsCache);
       if (activeDrawerPostId) renderDrawerComments(activeDrawerPostId);
     });
-
-    function renderAdsData(ads) {
+  function renderAdsData(ads) {
       let feedHtml = "", reelsHtml = "", paidHtml = "";
 
       const filtered = ads.filter(item => {
@@ -1104,12 +1114,12 @@
         if (data.imageUrl) {
           mediaTag += `
             <div class="relative rounded-xl overflow-hidden mt-2 border bg-slate-900 group">
-              <img src="${data.imageUrl}" class="w-full max-h-80 object-cover" loading="lazy">
+              <img src="${escapeHTML(data.imageUrl)}" class="w-full max-h-80 object-cover" loading="lazy">
               ${data.audioUrl ? `
                 <div class="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-md rounded-lg p-2 flex items-center gap-2 border border-white/20">
                   <div class="w-6 h-6 rounded-full bg-slate-800 border border-white flex items-center justify-center animate-spin-disc text-[10px]">🎵</div>
                   <audio controls class="h-6 flex-1 scale-90 -ml-2" preload="none">
-                    <source src="${data.audioUrl}" type="audio/mpeg">
+                    <source src="${escapeHTML(data.audioUrl)}" type="audio/mpeg">
                   </audio>
                 </div>
               ` : ''}
@@ -1120,7 +1130,7 @@
             <div class="mt-2 p-2 bg-purple-50 border border-purple-200 rounded-xl flex items-center gap-2">
               <span class="text-base">🎧</span>
               <audio controls class="w-full h-7" preload="none">
-                <source src="${data.audioUrl}" type="audio/mpeg">
+                <source src="${escapeHTML(data.audioUrl)}" type="audio/mpeg">
               </audio>
             </div>
           `;
@@ -1133,31 +1143,31 @@
           if (ytId) {
             mediaTag += `
               <div class="mt-2 rounded-xl overflow-hidden border bg-black aspect-video">
-                <iframe class="w-full h-full" src="https://www.youtube.com/embed/${ytId}" frameborder="0" allowfullscreen loading="lazy"></iframe>
+                <iframe class="w-full h-full" src="https://www.youtube.com/embed/${escapeHTML(ytId)}" frameborder="0" allowfullscreen loading="lazy"></iframe>
               </div>`;
           } else if (ttId) {
             mediaTag += `
-              <blockquote class="tiktok-embed mt-2" cite="${data.videoUrl}" data-video-id="${ttId}" style="max-width: 100%;">
+              <blockquote class="tiktok-embed mt-2" cite="${escapeHTML(data.videoUrl)}" data-video-id="${escapeHTML(ttId)}" style="max-width: 100%;">
                 <section></section>
               </blockquote>`;
           } else if (data.videoUrl.endsWith('.mp4') || data.videoUrl.includes('.mp4')) {
             mediaTag += `
               <div class="mt-2 rounded-xl overflow-hidden border bg-black">
                 <video controls preload="metadata" class="w-full max-h-80 object-cover">
-                  <source src="${data.videoUrl}" type="video/mp4">
+                  <source src="${escapeHTML(data.videoUrl)}" type="video/mp4">
                 </video>
               </div>`;
           } else {
             mediaTag += `
-              <a href="${data.videoUrl}" target="_blank" class="mt-2 block p-2 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-700 truncate">
-                🔗 ${data.videoUrl}
+              <a href="${escapeHTML(data.videoUrl)}" target="_blank" rel="noopener noreferrer" class="mt-2 block p-2 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-700 truncate">
+                🔗 ${escapeHTML(data.videoUrl)}
               </a>`;
           }
         }
 
         const authorPhoto = data.authorPhoto 
-          ? `<img src="${data.authorPhoto}" onclick="openPrivateChat('${data.authorUid}', '${data.authorName || 'User'}', '${data.authorPhoto}')" class="w-7 h-7 rounded-full object-cover cursor-pointer hover:opacity-80" title="Messenger မှတစ်ဆင့် စာပို့ပါ">` 
-          : `<div onclick="openPrivateChat('${data.authorUid}', '${data.authorName || 'User'}', '')" class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] cursor-pointer" title="Messenger မှတစ်ဆင့် စာပို့ပါ">👤</div>`;
+          ? `<img src="${escapeHTML(data.authorPhoto)}" onclick="openPrivateChat('${escapeJsParam(data.authorUid)}', '${escapeJsParam(data.authorName || 'User')}', '${escapeJsParam(data.authorPhoto)}')" class="w-7 h-7 rounded-full object-cover cursor-pointer hover:opacity-80" title="Messenger မှတစ်ဆင့် စာပို့ပါ">` 
+          : `<div onclick="openPrivateChat('${escapeJsParam(data.authorUid)}', '${escapeJsParam(data.authorName || 'User')}', '')" class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] cursor-pointer" title="Messenger မှတစ်ဆင့် စာပို့ပါ">👤</div>`;
         
         const isOwner = currentUser && (currentUser.uid === data.authorUid);
         const canDelete = isAdmin || isOwner;
@@ -1171,13 +1181,13 @@
               <div class="flex items-center gap-2">
                 ${authorPhoto}
                 <div>
-                  <h4 class="font-bold text-slate-800 text-xs cursor-pointer hover:underline" onclick="openPrivateChat('${data.authorUid}', '${data.authorName || 'User'}', '${data.authorPhoto || ''}')">${escapeHTML(data.authorName || 'Unknown')}</h4>
-                  <span class="text-[10px] text-slate-400">${data.subCategory ? '#' + data.subCategory : ''}</span>
+                  <h4 class="font-bold text-slate-800 text-xs cursor-pointer hover:underline" onclick="openPrivateChat('${escapeJsParam(data.authorUid)}', '${escapeJsParam(data.authorName || 'User')}', '${escapeJsParam(data.authorPhoto || '')}')">${escapeHTML(data.authorName || 'Unknown')}</h4>
+                  <span class="text-[10px] text-slate-400">${data.subCategory ? '#' + escapeHTML(data.subCategory) : ''}</span>
                 </div>
               </div>
               <div class="flex gap-2">
-                ${canEdit ? `<button onclick="openEditPostModal('${data.id}', '${escapeHTML(data.title.replace(/'/g, "\\'"))}', '${escapeHTML((data.description || '').replace(/'/g, "\\'"))}')" class="text-xs text-blue-500 font-semibold hover:underline">✏️ ပြင်မည်</button>` : ''}
-                ${canDelete ? `<button onclick="deletePost('${data.id}', '${data.authorUid}')" class="text-xs text-rose-500 font-semibold hover:underline">🗑️ ဖျက်မည်</button>` : ''}
+                ${canEdit ? `<button onclick="openEditPostModal('${escapeJsParam(data.id)}', '${escapeJsParam(data.title)}', '${escapeJsParam(data.description || '')}')" class="text-xs text-blue-500 font-semibold hover:underline">✏️ ပြင်မည်</button>` : ''}
+                ${canDelete ? `<button onclick="deletePost('${escapeJsParam(data.id)}', '${escapeJsParam(data.authorUid)}')" class="text-xs text-rose-500 font-semibold hover:underline">🗑️ ဖျက်မည်</button>` : ''}
               </div>
             </div>
 
@@ -1187,13 +1197,13 @@
             ${mediaTag}
 
             <div class="flex items-center justify-between border-t py-1.5 text-xs text-slate-600 font-medium mt-2">
-              <button onclick="toggleLike('${data.id}', ${JSON.stringify(likes)})" class="flex items-center gap-1 ${isLiked ? 'text-rose-500 font-bold' : ''}">
+              <button onclick="toggleLike('${escapeJsParam(data.id)}', ${JSON.stringify(likes)})" class="flex items-center gap-1 ${isLiked ? 'text-rose-500 font-bold' : ''}">
                 ${isLiked ? '❤️' : '🤍'} <span>${likes.length}</span>
               </button>
-              <button onclick="openCommentDrawer('${data.id}')" class="flex items-center gap-1 text-slate-700 hover:text-blue-600 font-semibold">
+              <button onclick="openCommentDrawer('${escapeJsParam(data.id)}')" class="flex items-center gap-1 text-slate-700 hover:text-blue-600 font-semibold">
                 💬 <span>${totalCommentCount} ကွန်မန့်များ</span>
               </button>
-              <button onclick="sharePost('${escapeHTML(data.title)}', '${data.videoUrl || data.imageUrl || ''}')" class="flex items-center gap-1 text-blue-600">↪️ ရှယ်မည်</button>
+              <button onclick="sharePost('${escapeJsParam(data.title)}', '${escapeJsParam(data.videoUrl || data.imageUrl || '')}')" class="flex items-center gap-1 text-blue-600">↪️ ရှယ်မည်</button>
             </div>
           </div>
         `;
@@ -1267,7 +1277,7 @@
         const canDeleteChat = isAdmin || isMe;
 
         const photo = c.senderPhoto 
-          ? `<img src="${c.senderPhoto}" onclick="openPrivateChat('${c.senderUid}', '${c.sender}', '${c.senderPhoto}')" class="w-5 h-5 rounded-full inline object-cover cursor-pointer">` 
+          ? `<img src="${escapeHTML(c.senderPhoto)}" onclick="openPrivateChat('${escapeJsParam(c.senderUid)}', '${escapeJsParam(c.sender)}', '${escapeJsParam(c.senderPhoto)}')" class="w-5 h-5 rounded-full inline object-cover cursor-pointer">` 
           : '';
         
         let timeStr = "";
@@ -1280,10 +1290,10 @@
           <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} group">
             <div class="flex items-center gap-1 text-[10px] text-slate-400 mb-0.5">
               ${!isMe ? photo : ''}
-              <span class="font-bold text-slate-600 cursor-pointer" onclick="openPrivateChat('${c.senderUid}', '${c.sender}', '${c.senderPhoto}')">${escapeHTML(c.sender || 'Guest')}</span>
+              <span class="font-bold text-slate-600 cursor-pointer" onclick="openPrivateChat('${escapeJsParam(c.senderUid)}', '${escapeJsParam(c.sender)}', '${escapeJsParam(c.senderPhoto)}')">${escapeHTML(c.sender || 'Guest')}</span>
               ${isMe ? photo : ''}
               <span class="text-[9px] text-slate-400 ml-1">${timeStr}</span>
-              ${canDeleteChat ? `<button onclick="deleteChatMessage('${c.id}', '${c.senderUid}')" class="text-rose-500 font-bold ml-1 hover:underline cursor-pointer" title="ဖျက်မည်">🗑️</button>` : ''}
+              ${canDeleteChat ? `<button onclick="deleteChatMessage('${escapeJsParam(c.id)}', '${escapeJsParam(c.senderUid)}')" class="text-rose-500 font-bold ml-1 hover:underline cursor-pointer" title="ဖျက်မည်">🗑️</button>` : ''}
             </div>
             <div class="p-2 rounded-xl text-xs max-w-[80%] relative ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border text-slate-800 rounded-tl-none'}">
               ${escapeHTML(c.text)}
@@ -1360,7 +1370,6 @@
           pmBox.scrollTop = pmBox.scrollHeight;
         });
     }
-
     document.getElementById('backToInboxBtn').addEventListener('click', () => {
       document.getElementById('messengerChatView').classList.add('hidden');
       if (pmUnsubscribe) pmUnsubscribe();
@@ -1412,8 +1421,8 @@
           const targetData = targetUserDoc.exists ? targetUserDoc.data() : {};
           
           html += `
-            <div onclick="openPrivateChat('${thread.targetUid}', '${escapeHTML(targetData.displayName || 'User')}', '${targetData.photoURL || ''}')" class="p-2.5 bg-white hover:bg-slate-100 rounded-xl flex items-center gap-3 cursor-pointer transition border border-slate-100">
-              <img src="${targetData.photoURL || 'https://via.placeholder.com/35'}" class="w-10 h-10 rounded-full object-cover border">
+            <div onclick="openPrivateChat('${escapeJsParam(thread.targetUid)}', '${escapeJsParam(targetData.displayName || 'User')}', '${escapeJsParam(targetData.photoURL || '')}')" class="p-2.5 bg-white hover:bg-slate-100 rounded-xl flex items-center gap-3 cursor-pointer transition border border-slate-100">
+              <img src="${escapeHTML(targetData.photoURL) || 'https://via.placeholder.com/35'}" class="w-10 h-10 rounded-full object-cover border">
               <div class="flex-1 min-w-0">
                 <h4 class="font-bold text-xs text-slate-800 leading-tight">${escapeHTML(targetData.displayName || 'User')}</h4>
                 <p class="text-[11px] text-slate-500 truncate mt-0.5">${escapeHTML(thread.lastMessage || '')}</p>
