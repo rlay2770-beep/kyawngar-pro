@@ -357,6 +357,17 @@
     let currentPmTargetUid = null;
     let pmUnsubscribe = null;
 
+    // Comment Box Security: Safe Text Sanitization (HTML Encoding Function)
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
     function showToast(msg) {
       const toast = document.getElementById('toast');
       document.getElementById('toastMsg').innerText = msg;
@@ -555,8 +566,7 @@
           adminBadge.classList.remove('hidden');
         } else {
           adminBadge.classList.add('hidden');
-        }
-
+    }
         try {
           const userDoc = await db.collection("users").doc(user.uid).get();
           if (userDoc.exists) {
@@ -725,6 +735,7 @@
         uploadBtn.disabled = false;
       }
     });
+
     async function deletePost(id, authorUid) {
       if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
 
@@ -894,8 +905,7 @@
                 🔗 ${data.videoUrl}
               </a>`;
           }
-        }
-
+  }
         const authorPhoto = data.authorPhoto 
           ? `<img src="${data.authorPhoto}" onclick="openPrivateChat('${data.authorUid}', '${data.authorName || 'User'}', '${data.authorPhoto}')" class="w-7 h-7 rounded-full object-cover cursor-pointer hover:opacity-80" title="Messenger မှတစ်ဆင့် စာပို့ပါ">` 
           : `<div onclick="openPrivateChat('${data.authorUid}', '${data.authorName || 'User'}', '')" class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] cursor-pointer" title="Messenger မှတစ်ဆင့် စာပို့ပါ">👤</div>`;
@@ -907,7 +917,7 @@
         let commentsList = comments.slice(-2).map(c => `
           <div class="text-[11px] bg-slate-100 p-1.5 rounded flex items-start gap-1.5">
             <img src="${c.userPhoto || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full mt-0.5 object-cover">
-            <div><span class="font-bold text-slate-700">${c.userName}:</span> ${c.text}</div>
+            <div><span class="font-bold text-slate-700">${escapeHTML(c.userName)}:</span> ${escapeHTML(c.text)}</div>
           </div>
         `).join('');
 
@@ -917,18 +927,18 @@
               <div class="flex items-center gap-2">
                 ${authorPhoto}
                 <div>
-                  <h4 class="font-bold text-slate-800 text-xs cursor-pointer hover:underline" onclick="openPrivateChat('${data.authorUid}', '${data.authorName || 'User'}', '${data.authorPhoto || ''}')">${data.authorName || 'Unknown'}</h4>
+                  <h4 class="font-bold text-slate-800 text-xs cursor-pointer hover:underline" onclick="openPrivateChat('${data.authorUid}', '${data.authorName || 'User'}', '${data.authorPhoto || ''}')">${escapeHTML(data.authorName || 'Unknown')}</h4>
                   <span class="text-[10px] text-slate-400">${data.subCategory ? '#' + data.subCategory : ''}</span>
                 </div>
               </div>
               <div class="flex gap-2">
-                ${canEdit ? `<button onclick="openEditPostModal('${data.id}', '${data.title.replace(/'/g, "\\'")}', '${(data.description || '').replace(/'/g, "\\'")}')" class="text-xs text-blue-500 font-semibold hover:underline">✏️ ပြင်မည်</button>` : ''}
+                ${canEdit ? `<button onclick="openEditPostModal('${data.id}', '${escapeHTML(data.title.replace(/'/g, "\\'"))}', '${escapeHTML((data.description || '').replace(/'/g, "\\'"))}')" class="text-xs text-blue-500 font-semibold hover:underline">✏️ ပြင်မည်</button>` : ''}
                 ${canDelete ? `<button onclick="deletePost('${data.id}', '${data.authorUid}')" class="text-xs text-rose-500 font-semibold hover:underline">🗑️ ဖျက်မည်</button>` : ''}
               </div>
             </div>
 
-            <h3 class="font-bold text-slate-900 text-sm">${data.title}</h3>
-            ${data.description ? `<p class="text-slate-600 text-xs leading-relaxed">${data.description}</p>` : ''}
+            <h3 class="font-bold text-slate-900 text-sm">${escapeHTML(data.title)}</h3>
+            ${data.description ? `<p class="text-slate-600 text-xs leading-relaxed">${escapeHTML(data.description)}</p>` : ''}
             
             ${mediaTag}
 
@@ -937,7 +947,7 @@
                 ${isLiked ? '❤️' : '🤍'} <span>${likes.length}</span>
               </button>
               <button class="flex items-center gap-1">💬 <span>${comments.length}</span></button>
-              <button onclick="sharePost('${data.title}', '${data.videoUrl || data.imageUrl || ''}')" class="flex items-center gap-1 text-blue-600">↪️ ရှယ်မည်</button>
+              <button onclick="sharePost('${escapeHTML(data.title)}', '${data.videoUrl || data.imageUrl || ''}')" class="flex items-center gap-1 text-blue-600">↪️ ရှယ်မည်</button>
             </div>
 
             <div class="space-y-1.5">
@@ -1036,13 +1046,13 @@
           <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} group">
             <div class="flex items-center gap-1 text-[10px] text-slate-400 mb-0.5">
               ${!isMe ? photo : ''}
-              <span class="font-bold text-slate-600 cursor-pointer" onclick="openPrivateChat('${c.senderUid}', '${c.sender}', '${c.senderPhoto}')">${c.sender || 'Guest'}</span>
+              <span class="font-bold text-slate-600 cursor-pointer" onclick="openPrivateChat('${c.senderUid}', '${c.sender}', '${c.senderPhoto}')">${escapeHTML(c.sender || 'Guest')}</span>
               ${isMe ? photo : ''}
               <span class="text-[9px] text-slate-400 ml-1">${timeStr}</span>
               ${canDeleteChat ? `<button onclick="deleteChatMessage('${c.id}', '${c.senderUid}')" class="text-rose-500 font-bold ml-1 hover:underline cursor-pointer" title="ဖျက်မည်">🗑️</button>` : ''}
             </div>
             <div class="p-2 rounded-xl text-xs max-w-[80%] relative ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border text-slate-800 rounded-tl-none'}">
-              ${c.text}
+              ${escapeHTML(c.text)}
             </div>
           </div>
         `;
@@ -1106,7 +1116,7 @@
             html += `
               <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} my-1">
                 <div class="p-2 rounded-2xl text-xs max-w-[80%] ${isMe ? 'bg-blue-600 text-white rounded-br-none shadow-sm' : 'bg-slate-200 text-slate-800 rounded-bl-none'}">
-                  ${data.text}
+                  ${escapeHTML(data.text)}
                 </div>
               </div>
             `;
@@ -1156,7 +1166,8 @@
         showToast("စာပို့ရာတွင် အမှားရှိပါသည်: " + err.message);
       }
     });
-  function loadPrivateChatList() {
+
+    function loadPrivateChatList() {
       if (!currentUser) return;
 
       db.collection("users").doc(currentUser.uid).collection("threads").orderBy("updatedAt", "desc").onSnapshot(async (snapshot) => {
@@ -1167,11 +1178,11 @@
           const targetData = targetUserDoc.exists ? targetUserDoc.data() : {};
           
           html += `
-            <div onclick="openPrivateChat('${thread.targetUid}', '${targetData.displayName || 'User'}', '${targetData.photoURL || ''}')" class="p-2.5 bg-white hover:bg-slate-100 rounded-xl flex items-center gap-3 cursor-pointer transition border border-slate-100">
+            <div onclick="openPrivateChat('${thread.targetUid}', '${escapeHTML(targetData.displayName || 'User')}', '${targetData.photoURL || ''}')" class="p-2.5 bg-white hover:bg-slate-100 rounded-xl flex items-center gap-3 cursor-pointer transition border border-slate-100">
               <img src="${targetData.photoURL || 'https://via.placeholder.com/35'}" class="w-10 h-10 rounded-full object-cover border">
               <div class="flex-1 min-w-0">
-                <h4 class="font-bold text-xs text-slate-800 leading-tight">${targetData.displayName || 'User'}</h4>
-                <p class="text-[11px] text-slate-500 truncate mt-0.5">${thread.lastMessage || ''}</p>
+                <h4 class="font-bold text-xs text-slate-800 leading-tight">${escapeHTML(targetData.displayName || 'User')}</h4>
+                <p class="text-[11px] text-slate-500 truncate mt-0.5">${escapeHTML(thread.lastMessage || '')}</p>
               </div>
             </div>
           `;
