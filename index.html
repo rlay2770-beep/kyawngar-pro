@@ -1485,6 +1485,70 @@
       });
     }
   </script>
+  <!-- ၁။ ကြော်ငြာနေရာ (နှိပ်လို့ရအောင် ခလုတ်အဖြစ် ပြင်ထားသည်) -->
+<div class="sponsor-ad-container" style="text-align: center; margin: 20px 0;">
+  <button onclick="openAdModal()" style="background-color: #ff9800; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    📢 ဝင်ငွေရရှိမည့် စပွန်စာ ကြော်ငြာနေရာ (ကြော်ငြာရန် နှိပ်ပါ)
+  </button>
+</div>
+
+<!-- ၂။ ဝက်ဘ်ဆိုက် အောက်ခြေ (Footer) တွင် စည်းကမ်းချက်များ Link ထည့်ခြင်း -->
+<footer style="text-align: center; padding: 15px; background: #f1f1f1; margin-top: 30px;">
+  <p>© 2026 KyawNgar. All rights reserved. | 
+    <a href="javascript:void(0)" onclick="openTermsModal()" style="color: #007bff; text-decoration: underline; cursor: pointer;">
+      ဝက်ဘ်ဆိုက် စည်းကမ်းချက်များ
+    </a>
+  </p>
+</footer>
+
+<!-- ================= Modal Boxes (Pop-up များ) ================= -->
+
+<!-- ကြော်ငြာရန် Pop-up Box -->
+<div id="adModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000;">
+  <div style="background:white; width:90%; max-width:400px; margin:100px auto; padding:200px 20px 20px 20px; border-radius:10px; position:relative; text-align:center;">
+    <h3>📢 စပွန်စာ ကြော်ငြာ ထည့်သွင်းရန်</h3>
+    <p>ဤနေရာတွင် သင်၏ စီးပွားရေးကြော်ငြာများကို ထည့်သွင်းလိုပါက အောက်ပါ အီးမေးလ် သို့မဟုတ် ဖုန်းမှတစ်ဆင့် ဆက်သွယ်နိုင်ပါသည်။</p>
+    <p><strong>Email:</strong> admin@kyawngar.com</p>
+    <button onclick="closeAdModal()" style="background:#dc3545; color:white; border:none; padding:8px 16px; border-radius:5px; cursor:pointer;">ပိတ်မည်</button>
+  </div>
+</div>
+
+<!-- စည်းကမ်းချက်များ Pop-up Box -->
+<div id="termsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000;">
+  <div style="background:white; width:90%; max-width:500px; margin:50px auto; padding:20px; border-radius:10px; max-height:80vh; overflow-y:auto;">
+    <h3 style="text-align:center;">📜 ဝက်ဘ်ဆိုက် စည်းကမ်းချက်များ</h3>
+    <hr>
+    <ol style="line-height: 1.8; text-align: left;">
+      <li><strong>အကောင့်လုံခြုံရေး:</strong> အသုံးပြုသူများသည် မိမိတို့၏ အကောင့်အချက်အလက်များကို လျှို့ဝှက်စွာ ထိန်းသိမ်းရမည်။</li>
+      <li><strong>မတော်မတရား ရေးသားမှု တားမြစ်ခြင်း:</strong> မမှန်သတင်းများ၊ ဆဲဆိုရေးသားမှုများနှင့် ဥပဒေနှင့် မလွတ်ကင်းသော စာရွက်စာတမ်း/ကြော်ငြာများကို တင်ခွင့်မရှိပါ။</li>
+      <li><strong>ကြော်ငြာများ စိစစ်ခြင်း:</strong> မသမာသော ကြော်ငြာများတွေ့ရှိပါက Admin မှ ကြိုတင်အကြောင်းမကြားဘဲ ဖျက်ပိုင်ခွင့်ရှိသည်။</li>
+      <li><strong>မူပိုင်ခွင့်:</strong> ဝက်ဘ်ဆိုက်အတွင်းရှိ အချက်အလက်များကို ခွင့်ပြုချက်မရှိဘဲ ကူးယူဖော်ပြခြင်း မပြုရ။</li>
+    </ol>
+    <div style="text-align: center; margin-top: 20px;">
+      <button onclick="closeTermsModal()" style="background:#007bff; color:white; border:none; padding:8px 16px; border-radius:5px; cursor:pointer;">လက်ခံသည်/ပိတ်မည်</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= JavaScript (Pop-up များကို ပွင့်/ပိတ် လုပ်ပေးရန်) ================= -->
+<script>
+  // ကြော်ငြာ Pop-up ပွင့်/ပိတ်
+  function openAdModal() {
+    document.getElementById('adModal').style.display = 'block';
+  }
+  function closeAdModal() {
+    document.getElementById('adModal').style.display = 'none';
+  }
+
+  // စည်းကမ်းချက်များ Pop-up ပွင့်/ပိတ်
+  function openTermsModal() {
+    document.getElementById('termsModal').style.display = 'block';
+  }
+  function closeTermsModal() {
+    document.getElementById('termsModal').style.display = 'none';
+  }
+      </script>
+  
 </body>
 </html>
     
