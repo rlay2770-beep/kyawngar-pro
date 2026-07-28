@@ -71,13 +71,15 @@
     
     <!-- Auth Container -->
     <div id="authContainer" class="flex items-center gap-1.5">
+      <button id="openTermsBtnHeader" onclick="openTermsModal()" class="text-xs text-blue-100 hover:underline mr-1 hidden sm:inline">စည်းကမ်းချက်များ</button>
+      
       <button id="openAuthModalBtn" class="bg-white text-blue-600 text-xs font-bold px-3 py-1.5 rounded-lg shadow flex items-center gap-1.5 hover:bg-slate-100 transition">
         <span>🔐 Login / Register</span>
       </button>
 
       <div id="userInfo" class="hidden flex items-center gap-2">
         <!-- Hidden Secret Admin Click Area (Profile Picture 5-Clicks) -->
-        <div class="relative cursor-pointer" id="secretAdminTrigger" title="Profile ဓာတ်ပုံ">
+        <div class="relative cursor-pointer" id="secretAdminTrigger" title="Profile ဓာတ်ပုံ (Admin Mode အတွက် ၅ ချက်နှိပ်ပါ)">
           <img id="userImg" class="w-8 h-8 rounded-full border-2 border-white shadow object-cover">
         </div>
         
@@ -93,6 +95,29 @@
 
   <!-- Hidden Profile Photo Input -->
   <input type="file" id="profileFileInput" accept="image/*" class="hidden">
+
+  <!-- Terms and Conditions Modal Popup -->
+  <div id="termsModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-5 space-y-3 relative max-h-[80vh] flex flex-col">
+      <button onclick="closeTermsModal()" class="absolute top-3 right-3 text-slate-400 text-lg font-bold hover:text-slate-600">✕</button>
+      <h3 class="text-base font-bold text-slate-800 border-b pb-2 flex items-center gap-2">📜 စည်းကမ်းချက်များနှင့် မူဝါဒများ</h3>
+      
+      <div class="text-xs text-slate-600 space-y-2.5 overflow-y-auto pr-1 flex-1 leading-relaxed">
+        <p class="font-semibold text-slate-800">၁။ အသုံးပြုမှုဆိုင်ရာ စည်းကမ်းများ</p>
+        <p>KyawNgar Pro ကို အသုံးပြုရာတွင် မဖွယ်မရာ စာသားများ၊ အမုန်းစကားများ၊ သတင်းတုများနှင့် မသမာသော နည်းလမ်းဖြင့် ငွေကြေးလိမ်လည်သည့် ကြော်ငြာများ တင်ခြင်းကို လုံးဝ ခွင့်မပြုပါ။</p>
+
+        <p class="font-semibold text-slate-800">၂။ မူပိုင်ခွင့်နှင့် ကိုယ်ရေးအချက်အလက်</p>
+        <p>အသုံးပြုသူများ၏ အချက်အလက်များကို လုံခြုံစွာ ထိန်းသိမ်းထားမည်ဖြစ်ပြီး အခြားသော ပြင်ပအဖွဲ့အစည်းများထံ အလွဲသုံးစား ရောင်းချခြင်း လုံးဝ ပြုလုပ်မည်မဟုတ်ပါ။</p>
+
+        <p class="font-semibold text-slate-800">၃။ ကြော်ငြာနှင့် ဝင်ငွေရရှိမှု မူဝါဒ</p>
+        <p>ဤ App/Website တွင် ပြသထားသော VIP ကြော်ငြာများနှင့် အခြားသော Sponsor ကြော်ငြာများသည် စီးပွားရေးလုပ်ငန်းရှင်များနှင့် အသိုင်းအဝိုင်း ချိတ်ဆက်ပေးရန်ဖြစ်ပြီး လိမ်လည်မှုများ ဖြစ်ပေါ်ပါက Admin မှ တာဝန်ယူမည်မဟုတ်ဘိုင်း စိစစ်ဖျက်ဆီးပိုင်ခွင့်ရှိသည်။</p>
+      </div>
+      
+      <button onclick="closeTermsModal()" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-blue-700 transition">
+        လက်ခံပါသည်
+      </button>
+    </div>
+  </div>
 
   <!-- Admin Passcode Modal Popup -->
   <div id="adminModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
@@ -148,6 +173,10 @@
           <button type="button" id="emailSignUpBtn" class="bg-slate-700 text-white font-bold py-2 rounded-lg text-xs hover:bg-slate-800">အကောင့်သစ်ဖွင့်မည်</button>
         </div>
       </form>
+
+      <div class="text-center pt-2">
+        <button onclick="openTermsModal()" class="text-[10px] text-slate-400 underline">စည်းကမ်းချက်များနှင့် မူဝါဒများ ဖတ်ရှုရန်</button>
+      </div>
 
       <div id="authStatus" class="text-center text-[11px] hidden p-2 rounded"></div>
     </div>
@@ -410,6 +439,14 @@
 
     let activeDrawerPostId = null; // Active Drawer Tracking
 
+    // Terms Modal Control
+    function openTermsModal() {
+      document.getElementById('termsModal').classList.remove('hidden');
+    }
+    function closeTermsModal() {
+      document.getElementById('termsModal').classList.add('hidden');
+    }
+
     // XSS Security: Strict Text Sanitization (HTML Encoding Function)
     function escapeHTML(str) {
       if (!str) return '';
@@ -525,8 +562,7 @@
         showToast("❌ Admin Password မှားယွင်းနေပါသည်");
       }
     });
-
-    const authModal = document.getElementById('authModal');
+  const authModal = document.getElementById('authModal');
     const openAuthModalBtn = document.getElementById('openAuthModalBtn');
     const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
     const googleLoginBtn = document.getElementById('googleLoginBtn');
@@ -858,6 +894,7 @@
         showToast("ပြင်ဆင်ရာတွင် အမှားရှိပါသည်: " + err.message);
       }
     });
+
     async function toggleLike(postId, likesArray) {
       if (!currentUser) return showToast("Like ပေးရန် အကောင့်ဝင်ပါ!");
       const postRef = db.collection("ads").doc(postId);
@@ -951,7 +988,6 @@
 
       listContainer.innerHTML = html;
     }
-
     // Add Main Comment from Drawer
     document.getElementById('drawerCommentForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1091,6 +1127,7 @@
       renderAdsData(allAdsCache);
       if (activeDrawerPostId) renderDrawerComments(activeDrawerPostId);
     });
+
     function renderAdsData(ads) {
       let feedHtml = "", reelsHtml = "", paidHtml = "";
 
@@ -1103,7 +1140,7 @@
         return matchesSearch && matchesTag;
       });
 
-      filtered.forEach((data) => {
+      filtered.forEach((data, index) => {
         const cat = data.category || 'feed';
         const likes = data.likes || [];
         const comments = data.comments || [];
@@ -1207,8 +1244,21 @@
             </div>
           </div>
         `;
+      // Monetization Readiness Banner Integration (Every 3 Posts Insert Banner Frame)
+        const adNetworkBannerUnit = `
+          <div class="bg-amber-50/60 border border-amber-200/70 rounded-xl p-2.5 text-center my-2 shadow-sm">
+            <span class="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider inline-block mb-1">Sponsored Ad / Monetization</span>
+            <div id="monetization-ad-unit-${index}" class="text-xs text-slate-500 min-h-[50px] flex items-center justify-center border border-dashed border-amber-300 rounded bg-white">
+              <!-- AdSense / AdMob / External Ad Network Code များကို ဤနေရာတွင် ထည့်သွင်းနိုင်သည် -->
+              📢 ဝင်ငွေရရှိမည့် စပွန်ဆာ ကြော်ငြာနေရာ
+            </div>
+          </div>
+        `;
 
-        if (cat === 'feed') feedHtml += card;
+        if (cat === 'feed') {
+          feedHtml += card;
+          if ((index + 1) % 3 === 0) feedHtml += adNetworkBannerUnit;
+        }
         if (cat === 'reels') reelsHtml += card;
         if (cat === 'ads') paidHtml += card;
       });
@@ -1369,7 +1419,8 @@
           pmBox.innerHTML = html || '<p class="text-center text-slate-400 text-[11px]">စကားစတင် ပြောဆိုပါ...</p>';
           pmBox.scrollTop = pmBox.scrollHeight;
         });
-      }
+    }
+
     document.getElementById('backToInboxBtn').addEventListener('click', () => {
       document.getElementById('messengerChatView').classList.add('hidden');
       if (pmUnsubscribe) pmUnsubscribe();
@@ -1434,6 +1485,68 @@
       });
     }
   </script>
+<!-- ၁။ ကြော်ငြာနေရာ (နှိပ်လို့ရအောင် ခလုတ်အဖြစ် ပြင်ထားသည်) -->
+<div class="sponsor-ad-container" style="text-align: center; margin: 20px 0;">
+  <button onclick="openAdModal()" style="background-color: #ff9800; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    📢 ဝင်ငွေရရှိမည့် စပွန်စာ ကြော်ငြာနေရာ (ကြော်ငြာရန် နှိပ်ပါ)
+  </button>
+</div>
+
+<!-- ၂။ ဝက်ဘ်ဆိုက် အောက်ခြေ (Footer) တွင် စည်းကမ်းချက်များ Link ထည့်ခြင်း -->
+<footer style="text-align: center; padding: 15px; background: #f1f1f1; margin-top: 30px;">
+  <p>© 2026 KyawNgar. All rights reserved. | 
+    <a href="javascript:void(0)" onclick="openTermsModal()" style="color: #007bff; text-decoration: underline; cursor: pointer;">
+      ဝက်ဘ်ဆိုက် စည်းကမ်းချက်များ
+    </a>
+  </p>
+</footer>
+
+<!-- ================= Modal Boxes (Pop-up များ) ================= -->
+
+<!-- ကြော်ငြာရန် Pop-up Box -->
+<div id="adModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000;">
+  <div style="background:white; width:90%; max-width:400px; margin:100px auto; padding:200px 20px 20px 20px; border-radius:10px; position:relative; text-align:center;">
+    <h3>📢 စပွန်စာ ကြော်ငြာ ထည့်သွင်းရန်</h3>
+    <p>ဤနေရာတွင် သင်၏ စီးပွားရေးကြော်ငြာများကို ထည့်သွင်းလိုပါက အောက်ပါ အီးမေးလ် သို့မဟုတ် ဖုန်းမှတစ်ဆင့် ဆက်သွယ်နိုင်ပါသည်။</p>
+    <p><strong>Email:</strong> admin@kyawngar.com</p>
+    <button onclick="closeAdModal()" style="background:#dc3545; color:white; border:none; padding:8px 16px; border-radius:5px; cursor:pointer;">ပိတ်မည်</button>
+  </div>
+</div>
+
+<!-- စည်းကမ်းချက်များ Pop-up Box -->
+<div id="termsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000;">
+  <div style="background:white; width:90%; max-width:500px; margin:50px auto; padding:20px; border-radius:10px; max-height:80vh; overflow-y:auto;">
+    <h3 style="text-align:center;">📜 ဝက်ဘ်ဆိုက် စည်းကမ်းချက်များ</h3>
+    <hr>
+    <ol style="line-height: 1.8; text-align: left;">
+      <li><strong>အကောင့်လုံခြုံရေး:</strong> အသုံးပြုသူများသည် မိမိတို့၏ အကောင့်အချက်အလက်များကို လျှို့ဝှက်စွာ ထိန်းသိမ်းရမည်။</li>
+      <li><strong>မတော်မတရား ရေးသားမှု တားမြစ်ခြင်း:</strong> မမှန်သတင်းများ၊ ဆဲဆိုရေးသားမှုများနှင့် ဥပဒေနှင့် မလွတ်ကင်းသော စာရွက်စာတမ်း/ကြော်ငြာများကို တင်ခွင့်မရှိပါ။</li>
+      <li><strong>ကြော်ငြာများ စိစစ်ခြင်း:</strong> မသမာသော ကြော်ငြာများတွေ့ရှိပါက Admin မှ ကြိုတင်အကြောင်းမကြားဘဲ ဖျက်ပိုင်ခွင့်ရှိသည်။</li>
+      <li><strong>မူပိုင်ခွင့်:</strong> ဝက်ဘ်ဆိုက်အတွင်းရှိ အချက်အလက်များကို ခွင့်ပြုချက်မရှိဘဲ ကူးယူဖော်ပြခြင်း မပြုရ။</li>
+    </ol>
+    <div style="text-align: center; margin-top: 20px;">
+      <button onclick="closeTermsModal()" style="background:#007bff; color:white; border:none; padding:8px 16px; border-radius:5px; cursor:pointer;">လက်ခံသည်/ပိတ်မည်</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= JavaScript (Pop-up များကို ပွင့်/ပိတ် လုပ်ပေးရန်) ================= -->
+<script>
+  // ကြော်ငြာ Pop-up ပွင့်/ပိတ်
+  function openAdModal() {
+    document.getElementById('adModal').style.display = 'block';
+  }
+  function closeAdModal() {
+    document.getElementById('adModal').style.display = 'none';
+  }
+
+  // စည်းကမ်းချက်များ Pop-up ပွင့်/ပိတ်
+  function openTermsModal() {
+    document.getElementById('termsModal').style.display = 'block';
+  }
+  function closeTermsModal() {
+    document.getElementById('termsModal').style.display = 'none';
+  }
+</script>
 </body>
 </html>
-    
