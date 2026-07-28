@@ -892,21 +892,25 @@
     });
 
     async function deletePost(id, authorUid) {
-      if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
+  if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
 
-      if (!isAdmin && currentUser.uid !== authorUid) {
-        return showToast("မိမိတင်ထားသော ပို့စ်များကိုသာ ဖျက်ပိုင်ခွင့်ရှိပါသည်။");
-      }
+  // Admin Mode ဖွင့်ထားလျှင် သို့မဟုတ် မိမိတင်ထားသော ပို့စ်ဖြစ်လျှင် ဖျက်ခွင့်ပေးမည်
+  const isOwner = currentUser.uid === authorUid;
+  
+  if (!isAdmin && !isOwner) {
+    return showToast("မိမိတင်ထားသော ပို့စ်များကိုသာ ဖျက်ပိုင်ခွင့်ရှိပါသည်။");
+  }
 
-      if (confirm(isAdmin ? "Admin အဖြစ် ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?" : "ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?")) {
-        try {
-          await db.collection("ads").doc(id).delete();
-          showToast("ပို့စ်ကို ဖျက်ပြီးပါပြီ!");
-        } catch (err) {
-          showToast("ဖျက်ရာတွင် အမှားရှိပါသည်: " + err.message);
-        }
-      }
+  if (confirm(isAdmin ? "👑 Admin အဖြစ် ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?" : "ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?")) {
+    try {
+      await db.collection("ads").doc(id).delete();
+      showToast("ပို့စ်ကို ဖျက်ပြီးပါပြီ!");
+    } catch (err) {
+      showToast("ဖျက်ရာတွင် အမှားရှိပါသည်: " + err.message);
     }
+  }
+    }
+    
 
     function openEditPostModal(id, title, desc) {
       document.getElementById('editPostId').value = id;
