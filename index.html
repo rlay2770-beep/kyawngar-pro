@@ -24,7 +24,7 @@
       animation: spin-slow 5s linear infinite;
     }
 
-    /* Comment Drawer Dynamic Style */
+    /* Comment Drawer (အံဆွဲ ဘောက်) Dynamic Style */
     .comment-drawer {
       position: fixed;
       bottom: -100%;
@@ -78,6 +78,7 @@
       </button>
 
       <div id="userInfo" class="hidden flex items-center gap-2">
+        <!-- Hidden Secret Admin Click Area (Profile Picture 5-Clicks) -->
         <div class="relative cursor-pointer" id="secretAdminTrigger" title="Profile ဓာတ်ပုံ (Admin Mode အတွက် ၅ ချက်နှိပ်ပါ)">
           <img id="userImg" class="w-8 h-8 rounded-full border-2 border-white shadow object-cover">
         </div>
@@ -109,7 +110,7 @@
         <p>အသုံးပြုသူများ၏ အချက်အလက်များကို လုံခြုံစွာ ထိန်းသိမ်းထားမည်ဖြစ်ပြီး အခြားသော ပြင်ပအဖွဲ့အစည်းများထံ အလွဲသုံးစား ရောင်းချခြင်း လုံးဝ ပြုလုပ်မည်မဟုတ်ပါ။</p>
 
         <p class="font-semibold text-slate-800">၃။ ကြော်ငြာနှင့် ဝင်ငွေရရှိမှု မူဝါဒ</p>
-        <p>ဤ App/Website တွင် ပြသထားသော VIP ကြော်ငြာများနှင့် အခြားသော Sponsor ကြော်ငြာများသည် စီးပွားရေးလုပ်ငန်းရှင်များနှင့် အသိုင်းအဝိုင်း ချိတ်ဆက်ပေးရန်ဖြစ်ပြီး လိမ်လည်မှုများ ဖြစ်ပေါ်ပါက Admin မှ တာဝန်ယူမည်မဟုတ်ဘိုင်း စိစစ်ဖျက်ဆီးပိုင်ခွင့်ရှိသည်။</p>
+        <p>ဤ App/Website တွင် ပြသထားသော VIP ကြော်ငြာများနှင့် အခြားသော Sponsor ကြော်ငြာများသည် စီးပွားရေးလုပ်ငန်းရှင်များနှင့် အသိုင်းအဝိုင်း ချိတ်ဆက်ပေးရန်ဖြစ်ပြီး လိမ်လည်မှုများ ဖြစ်ပေါ်ပါက Admin မှ တာဝန်ယူမည်မဟုတ်ဘဲ စိစစ်ဖျက်ဆီးပိုင်ခွင့်ရှိသည်။</p>
       </div>
       
       <button onclick="closeTermsModal()" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-blue-700 transition">
@@ -220,16 +221,20 @@
       </div>
     </div>
 
-    <!-- Tab 4: Messenger Chat System -->
+    <!-- Tab 4: Full Messenger Chat System -->
     <div id="tab-chat" class="tab-content space-y-4 hidden">
       <div class="bg-white rounded-2xl shadow border overflow-hidden flex flex-col h-[520px]">
         
+        <!-- Messenger Top Switcher Bar -->
         <div class="flex border-b bg-slate-50 p-2 gap-1" id="chatCategoryHeader">
           <button id="showPrivateChatBtn" class="flex-1 text-center font-bold text-xs py-2 rounded-lg bg-blue-600 text-white shadow-sm transition">⚡ Messenger</button>
           <button id="showPublicChatBtn" class="flex-1 text-center font-bold text-xs py-2 rounded-lg text-slate-600 hover:bg-slate-200 transition">💬 Public Group</button>
         </div>
 
+        <!-- 1. Messenger Private Inbox Section -->
         <div id="privateChatSection" class="flex-1 flex flex-col overflow-hidden relative">
+          
+          <!-- Inbox List View -->
           <div id="messengerInboxView" class="flex-1 flex flex-col overflow-y-auto p-2">
             <h3 class="text-xs font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">Chats & Messages</h3>
             <div id="privateChatList" class="space-y-1">
@@ -237,7 +242,9 @@
             </div>
           </div>
 
+          <!-- Messenger Direct Chat Conversation View -->
           <div id="messengerChatView" class="absolute inset-0 bg-white flex flex-col hidden z-10">
+            <!-- Chat Active Header -->
             <div class="p-2.5 bg-slate-100 border-b flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <button id="backToInboxBtn" class="p-1 rounded-full hover:bg-slate-200 text-slate-700 text-sm font-bold">⬅️</button>
@@ -249,17 +256,21 @@
               </div>
             </div>
 
+            <!-- Messages Stream Area -->
             <div id="pmMessagesBox" class="flex-1 overflow-y-auto space-y-2 p-3 bg-slate-50 text-xs">
               <p class="text-center text-slate-400 text-[11px]">စကားစတင် ပြောဆိုပါ...</p>
             </div>
 
+            <!-- Chat Message Form -->
             <form id="pmForm" class="p-2 border-t bg-white flex gap-2">
               <input type="text" id="pmInput" placeholder="Message စာရိုက်ပါ..." required class="flex-1 border p-2 rounded-full text-xs outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
               <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-blue-700 transition">Send</button>
             </form>
           </div>
+
         </div>
 
+        <!-- 2. Public Chat Container -->
         <div id="publicChatSection" class="hidden flex-1 flex flex-col overflow-hidden p-2">
           <div id="chatBox" class="flex-1 overflow-y-auto space-y-3 mb-2 p-2 bg-slate-50 rounded text-sm">
             <p class="text-center text-slate-400 text-xs">စကားပြောဆိုမှု မရှိသေးပါ...</p>
@@ -312,6 +323,7 @@
             </div>
           </div>
 
+          <!-- Media Attachments Section -->
           <div class="space-y-2 pt-2 border-t">
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">🖼️ ဓာတ်ပုံ ရွေးချယ်ရန်</label>
@@ -336,25 +348,30 @@
       </div>
     </div>
 
-    <!-- Sponsor Banner Unit -->
-    <div class="sponsor-ad-container my-4 text-center">
-      <button onclick="openAdModal()" class="bg-amber-500 text-white font-bold py-3 px-6 rounded-xl text-xs hover:bg-amber-600 transition shadow-md">
+    <!-- Sponsor Banner Action Section -->
+    <div class="sponsor-ad-container text-center my-5">
+      <button onclick="openAdModal()" class="bg-amber-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-amber-600 transition text-sm">
         📢 ဝင်ငွေရရှိမည့် စပွန်စာ ကြော်ငြာနေရာ (ကြော်ငြာရန် နှိပ်ပါ)
       </button>
     </div>
 
   </main>
 
-   <!-- Global Comment Drawer Component & Overlay -->
+  <!-- Global Comment Drawer Component & Overlay -->
   <div id="drawerOverlay" class="drawer-overlay" onclick="closeCommentDrawer()"></div>
   <div id="globalCommentDrawer" class="comment-drawer max-w-md mx-auto">
+    <!-- Drawer Header -->
     <div class="p-3 border-b flex justify-between items-center bg-slate-50 rounded-t-2xl">
       <h3 class="text-xs font-bold text-slate-800 flex items-center gap-1">💬 ကွန်မန့်များ</h3>
       <button onclick="closeCommentDrawer()" class="text-slate-400 font-bold text-base hover:text-slate-600 px-2">✕</button>
     </div>
     
-    <div id="drawerCommentList" class="flex-1 overflow-y-auto p-3 space-y-2 max-h-[50vh]"></div>
+    <!-- Drawer Content (Comments Stream) -->
+    <div id="drawerCommentList" class="flex-1 overflow-y-auto p-3 space-y-2 max-h-[50vh]">
+      <!-- Dynamic Comments will render here -->
+    </div>
 
+    <!-- Drawer Input Form (Comment Post Area) -->
     <form id="drawerCommentForm" class="p-2 border-t bg-white flex gap-1.5">
       <input type="text" id="drawerCommentInput" placeholder="ကွန်မန့် ရေးပါ..." required class="flex-1 border p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
       <button type="submit" class="bg-blue-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition">ပို့မည်</button>
@@ -380,23 +397,20 @@
     </div>
   </div>
 
-  <!-- Sponsor Ad Contact Modal -->
+  <!-- Sponsor Ad Modal Popup -->
   <div id="adModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-3 text-center relative">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-4 relative text-center">
       <button onclick="closeAdModal()" class="absolute top-3 right-3 text-slate-400 text-lg font-bold hover:text-slate-600">✕</button>
-      <h3 class="text-sm font-bold text-slate-800 border-b pb-2">📢 စပွန်စာ ကြော်ငြာ ထည့်သွင်းရန်</h3>
+      <h3 class="text-base font-bold text-slate-800 border-b pb-2">📢 စပွန်စာ ကြော်ငြာ ထည့်သွင်းရန်</h3>
       <p class="text-xs text-slate-600 leading-relaxed">ဤနေရာတွင် သင်၏ စီးပွားရေးကြော်ငြာများကို ထည့်သွင်းလိုပါက အောက်ပါ အီးမေးလ်မှတစ်ဆင့် ဆက်သွယ်နိုင်ပါသည်။</p>
-      <p class="text-xs font-bold text-blue-600 bg-blue-50 p-2 rounded-lg border border-blue-100">admin@kyawngar.com</p>
-      <button onclick="closeAdModal()" class="w-full bg-rose-500 text-white font-bold py-2 rounded-lg text-xs hover:bg-rose-600 transition">ပိတ်မည်</button>
+      <div class="bg-slate-100 p-2.5 rounded-lg text-xs font-semibold text-slate-800">
+        📧 Email: <a href="mailto:admin@kyawngar.com" class="text-blue-600 underline">admin@kyawngar.com</a>
+      </div>
+      <button onclick="closeAdModal()" class="w-full bg-rose-500 text-white font-bold py-2 rounded-lg text-xs hover:bg-rose-600 transition">
+        ပိတ်မည်
+      </button>
     </div>
   </div>
-
-  <!-- Footer -->
-  <footer class="bg-slate-200 text-slate-600 text-[11px] text-center p-3 mb-12">
-    <p>© 2026 KyawNgar Pro. All rights reserved. | 
-      <a href="javascript:void(0)" onclick="openTermsModal()" class="text-blue-600 underline">ဝက်ဘ်ဆိုက် စည်းကမ်းချက်များ</a>
-    </p>
-  </footer>
 
   <!-- Bottom Navigation Bar -->
   <nav class="bg-white border-t fixed bottom-0 left-0 right-0 flex justify-around py-2 shadow-lg z-50 text-[11px] font-semibold text-slate-500">
@@ -406,6 +420,15 @@
     <button type="button" data-tab="chat" class="nav-btn flex flex-col items-center flex-1"><span>💬</span>Chat</button>
     <button type="button" data-tab="admin" class="nav-btn flex flex-col items-center flex-1"><span>⚙️</span>Post တင်ရန်</button>
   </nav>
+
+  <!-- Footer -->
+  <footer class="bg-slate-200 text-center py-4 text-xs text-slate-600 mb-12">
+    <p>© 2026 KyawNgar. All rights reserved. | 
+      <a href="javascript:void(0)" onclick="openTermsModal()" class="text-blue-600 underline font-medium">
+        ဝက်ဘ်ဆိုက် စည်းကမ်းချက်များ
+      </a>
+    </p>
+  </footer>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -447,13 +470,14 @@
 
     let activeDrawerPostId = null;
 
-    // Modal Control Functions
+    // Modal Handlers
     function openTermsModal() {
       document.getElementById('termsModal').classList.remove('hidden');
     }
     function closeTermsModal() {
       document.getElementById('termsModal').classList.add('hidden');
     }
+
     function openAdModal() {
       document.getElementById('adModal').classList.remove('hidden');
     }
@@ -461,7 +485,7 @@
       document.getElementById('adModal').classList.add('hidden');
     }
 
-    // Text Sanitization
+    // XSS Security: Strict Text Sanitization (HTML Encoding Function)
     function escapeHTML(str) {
       if (!str) return '';
       return String(str)
@@ -472,6 +496,7 @@
         .replace(/'/g, "&#039;");
     }
 
+    // Security Helper: Escape quotes for inline JS attributes
     function escapeJsParam(str) {
       if (!str) return '';
       return String(str)
@@ -523,12 +548,11 @@
         reader.onerror = (err) => reject(err);
       });
     }
-
-    function audioToBase64(file) {
+        function audioToBase64(file) {
       return new Promise((resolve, reject) => {
         if (!file || !file.type.startsWith('audio/')) return resolve(null);
         if (file.size > 1048576) {
-          return reject(new Error("Audio ဖိုင် 1MB အောက်သာ လက်ခံပါသည်။"));
+          return reject(new Error("Audio ဖိုင်အမျိုးအစား လိုင်းဆွဲအား သက်သာစေရန် 1MB အောက်သာ လက်ခံပါသည်။"));
         }
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -537,7 +561,7 @@
       });
     }
 
-    // Secret Admin Mode Trigger
+    // Secret Admin Mode Trigger (Profile Image 5-Clicks)
     let profileClickCount = 0;
     let profileClickTimer = null;
     const secretAdminTrigger = document.getElementById('secretAdminTrigger');
@@ -654,7 +678,7 @@
         showToast("အကောင့်သစ် ဖွင့်လှစ်ခြင်း အောင်မြင်သည်");
         setTimeout(() => authModal.classList.add('hidden'), 1000);
       } catch (err) {
-        showAuthStatus("အကောင့်ဖွင့်ခြင်း အမှား: " + err.message, true);
+       showAuthStatus("အကောင့်ဖွင့်ခြင်း အမှား: " + err.message, true);
       }
     });
 
@@ -742,7 +766,8 @@
         window.scrollTo(0, 0);
       });
     });
-        const tagButtons = document.querySelectorAll('.tag-btn');
+
+    const tagButtons = document.querySelectorAll('.tag-btn');
     tagButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         activeTag = btn.getAttribute('data-tag');
@@ -781,7 +806,7 @@
       const match = url.match(/video\/(\d+)/);
       return match ? match[1] : null;
     }
-
+    // Upload Form Handling
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!currentUser) return showToast("Login အရင်ဝင်ပါ!");
@@ -804,7 +829,8 @@
         if (imageFile) {
           status.classList.remove('hidden');
           status.className = "text-center text-xs block bg-blue-50 text-blue-700 p-2 rounded font-semibold border border-blue-200";
-          status.innerText = "🖼️ ဓာတ်ပုံကို ချုံ့ပေးနေပါသည်...";
+          status.innerText = "🖼️ ဓာတ်ပုံကို လိုင်းဆွဲအား သက်သာစေရန် ချုံ့ပေးနေပါသည်...";
+          
           imageUrl = await imageToBase64Compressed(imageFile, 380, 0.35);
         }
 
@@ -812,6 +838,7 @@
           status.classList.remove('hidden');
           status.className = "text-center text-xs block bg-purple-50 text-purple-700 p-2 rounded font-semibold border border-purple-200";
           status.innerText = "🎵 Audio ဖိုင် စစ်ဆေးနေပါသည်...";
+          
           try {
             audioBase64 = await audioToBase64(audioFile);
           } catch(err) {
@@ -914,6 +941,7 @@
       }
     }
 
+    // Comment Drawer System
     function openCommentDrawer(postId) {
       activeDrawerPostId = postId;
       document.getElementById('globalCommentDrawer').classList.add('open');
@@ -1013,6 +1041,7 @@
         createdAt: new Date().toISOString(),
         replies: []
       };
+
       try {
         await db.collection("ads").doc(activeDrawerPostId).update({
           comments: firebase.firestore.FieldValue.arrayUnion(commentObj)
@@ -1027,9 +1056,7 @@
 
     function toggleReplyBox(postId, commentId) {
       const replyBox = document.getElementById(`reply-box-${postId}-${commentId}`);
-      if (replyBox) {
-        replyBox.classList.toggle('hidden');
-      }
+      if (replyBox) replyBox.classList.toggle('hidden');
     }
 
     async function addReply(postId, commentId, e) {
@@ -1139,7 +1166,6 @@
         const matchesTag = (activeTag === "all") || (item.subCategory === activeTag);
         return matchesSearch && matchesTag;
       });
-
       filtered.forEach((data, index) => {
         const cat = data.category || 'feed';
         const likes = data.likes || [];
@@ -1277,7 +1303,7 @@
         return showToast("Admin မဟုတ်ပါက မိမိစာများကိုသာ ဖျက်နိုင်ပါမည်။");
       }
 
-      if (confirm("ဒီ Chat စာသားကို ဖျက်ရန် သေဘာပါသလား?")) {
+      if (confirm("ဒီ Chat စာသားကို ဖျက်ရန် သေချာပါသလား?")) {
         try {
           await db.collection("chats").doc(chatId).delete();
           showToast("Chat စာသားကို ဖျက်ပြီးပါပြီ");
@@ -1377,8 +1403,9 @@
 
     function getChatRoomId(uid1, uid2) {
       return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
-  }
-  function openPrivateChat(targetUid, targetName, targetPhoto) {
+    }
+
+    function openPrivateChat(targetUid, targetName, targetPhoto) {
       if (!currentUser) return showToast("Private Message ပို့ရန် အကောင့်ဝင်ပါ!");
       if (currentUser.uid === targetUid) return showToast("မိမိကိုယ်တိုင်ထံ စာပို့၍မရပါ");
 
