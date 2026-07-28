@@ -71,15 +71,13 @@
     
     <!-- Auth Container -->
     <div id="authContainer" class="flex items-center gap-1.5">
-      <button id="openTermsBtnHeader" onclick="openTermsModal()" class="text-xs text-blue-100 hover:underline mr-1 hidden sm:inline">စည်းကမ်းချက်များ</button>
-      
       <button id="openAuthModalBtn" class="bg-white text-blue-600 text-xs font-bold px-3 py-1.5 rounded-lg shadow flex items-center gap-1.5 hover:bg-slate-100 transition">
         <span>🔐 Login / Register</span>
       </button>
 
       <div id="userInfo" class="hidden flex items-center gap-2">
         <!-- Hidden Secret Admin Click Area (Profile Picture 5-Clicks) -->
-        <div class="relative cursor-pointer" id="secretAdminTrigger" title="Profile ဓာတ်ပုံ (Admin Mode အတွက် ၅ ချက်နှိပ်ပါ)">
+        <div class="relative cursor-pointer" id="secretAdminTrigger" title="Profile ဓာတ်ပုံ">
           <img id="userImg" class="w-8 h-8 rounded-full border-2 border-white shadow object-cover">
         </div>
         
@@ -95,29 +93,6 @@
 
   <!-- Hidden Profile Photo Input -->
   <input type="file" id="profileFileInput" accept="image/*" class="hidden">
-
-  <!-- Terms and Conditions Modal Popup -->
-  <div id="termsModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-5 space-y-3 relative max-h-[80vh] flex flex-col">
-      <button onclick="closeTermsModal()" class="absolute top-3 right-3 text-slate-400 text-lg font-bold hover:text-slate-600">✕</button>
-      <h3 class="text-base font-bold text-slate-800 border-b pb-2 flex items-center gap-2">📜 စည်းကမ်းချက်များနှင့် မူဝါဒများ</h3>
-      
-      <div class="text-xs text-slate-600 space-y-2.5 overflow-y-auto pr-1 flex-1 leading-relaxed">
-        <p class="font-semibold text-slate-800">၁။ အသုံးပြုမှုဆိုင်ရာ စည်းကမ်းများ</p>
-        <p>KyawNgar Pro ကို အသုံးပြုရာတွင် မဖွယ်မရာ စာသားများ၊ အမုန်းစကားများ၊ သတင်းတုများနှင့် မသမာသော နည်းလမ်းဖြင့် ငွေကြေးလိမ်လည်သည့် ကြော်ငြာများ တင်ခြင်းကို လုံးဝ ခွင့်မပြုပါ။</p>
-
-        <p class="font-semibold text-slate-800">၂။ မူပိုင်ခွင့်နှင့် ကိုယ်ရေးအချက်အလက်</p>
-        <p>အသုံးပြုသူများ၏ အချက်အလက်များကို လုံခြုံစွာ ထိန်းသိမ်းထားမည်ဖြစ်ပြီး အခြားသော ပြင်ပအဖွဲ့အစည်းများထံ အလွဲသုံးစား ရောင်းချခြင်း လုံးဝ ပြုလုပ်မည်မဟုတ်ပါ။</p>
-
-        <p class="font-semibold text-slate-800">၃။ ကြော်ငြာနှင့် ဝင်ငွေရရှိမှု မူဝါဒ</p>
-        <p>ဤ App/Website တွင် ပြသထားသော VIP ကြော်ငြာများနှင့် အခြားသော Sponsor ကြော်ငြာများသည် စီးပွားရေးလုပ်ငန်းရှင်များနှင့် အသိုင်းအဝိုင်း ချိတ်ဆက်ပေးရန်ဖြစ်ပြီး လိမ်လည်မှုများ ဖြစ်ပေါ်ပါက Admin မှ တာဝန်ယူမည်မဟုတ်ဘဲ စိစစ်ဖျက်ဆီးပိုင်ခွင့်ရှိသည်။</p>
-      </div>
-      
-      <button onclick="closeTermsModal()" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-blue-700 transition">
-        လက်ခံပါသည်
-      </button>
-    </div>
-  </div>
 
   <!-- Admin Passcode Modal Popup -->
   <div id="adminModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
@@ -173,10 +148,6 @@
           <button type="button" id="emailSignUpBtn" class="bg-slate-700 text-white font-bold py-2 rounded-lg text-xs hover:bg-slate-800">အကောင့်သစ်ဖွင့်မည်</button>
         </div>
       </form>
-
-      <div class="text-center pt-2">
-        <button onclick="openTermsModal()" class="text-[10px] text-slate-400 underline">စည်းကမ်းချက်များနှင့် မူဝါဒများ ဖတ်ရှုရန်</button>
-      </div>
 
       <div id="authStatus" class="text-center text-[11px] hidden p-2 rounded"></div>
     </div>
@@ -348,16 +319,9 @@
       </div>
     </div>
 
-    <!-- Sponsor Banner Action Section -->
-    <div class="sponsor-ad-container text-center my-5">
-      <button onclick="openAdModal()" class="bg-amber-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-amber-600 transition text-sm">
-        📢 ဝင်ငွေရရှိမည့် စပွန်စာ ကြော်ငြာနေရာ (ကြော်ငြာရန် နှိပ်ပါ)
-      </button>
-    </div>
-
   </main>
 
-    <!-- Global Comment Drawer Component & Overlay -->
+  <!-- Global Comment Drawer Component & Overlay -->
   <div id="drawerOverlay" class="drawer-overlay" onclick="closeCommentDrawer()"></div>
   <div id="globalCommentDrawer" class="comment-drawer max-w-md mx-auto">
     <!-- Drawer Header -->
@@ -397,21 +361,6 @@
     </div>
   </div>
 
-  <!-- Sponsor Ad Modal Popup -->
-  <div id="adModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-4 relative text-center">
-      <button onclick="closeAdModal()" class="absolute top-3 right-3 text-slate-400 text-lg font-bold hover:text-slate-600">✕</button>
-      <h3 class="text-base font-bold text-slate-800 border-b pb-2">📢 စပွန်စာ ကြော်ငြာ ထည့်သွင်းရန်</h3>
-      <p class="text-xs text-slate-600 leading-relaxed">ဤနေရာတွင် သင်၏ စီးပွားရေးကြော်ငြာများကို ထည့်သွင်းလိုပါက အောက်ပါ အီးမေးလ်မှတစ်ဆင့် ဆက်သွယ်နိုင်ပါသည်။</p>
-      <div class="bg-slate-100 p-2.5 rounded-lg text-xs font-semibold text-slate-800">
-        📧 Email: <a href="mailto:admin@kyawngar.com" class="text-blue-600 underline">admin@kyawngar.com</a>
-      </div>
-      <button onclick="closeAdModal()" class="w-full bg-rose-500 text-white font-bold py-2 rounded-lg text-xs hover:bg-rose-600 transition">
-        ပိတ်မည်
-      </button>
-    </div>
-  </div>
-
   <!-- Bottom Navigation Bar -->
   <nav class="bg-white border-t fixed bottom-0 left-0 right-0 flex justify-around py-2 shadow-lg z-50 text-[11px] font-semibold text-slate-500">
     <button type="button" data-tab="feed" class="nav-btn text-blue-600 flex flex-col items-center flex-1"><span>📰</span>သတင်းစင်</button>
@@ -420,15 +369,6 @@
     <button type="button" data-tab="chat" class="nav-btn flex flex-col items-center flex-1"><span>💬</span>Chat</button>
     <button type="button" data-tab="admin" class="nav-btn flex flex-col items-center flex-1"><span>⚙️</span>Post တင်ရန်</button>
   </nav>
-
-  <!-- Footer -->
-  <footer class="bg-slate-200 text-center py-4 text-xs text-slate-600 mb-12">
-    <p>© 2026 KyawNgar. All rights reserved. | 
-      <a href="javascript:void(0)" onclick="openTermsModal()" class="text-blue-600 underline font-medium">
-        ဝက်ဘ်ဆိုက် စည်းကမ်းချက်များ
-      </a>
-    </p>
-  </footer>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -459,9 +399,7 @@
     let currentUser = null;
     let currentUserCustomPhoto = ""; 
     let currentUserName = "";
-    
-    // Check Session Storage for Admin Key
-    let isAdmin = sessionStorage.getItem("kyawngar_admin") === "true";
+    let isAdmin = false;
 
     let allAdsCache = [];
     let currentSearchQuery = "";
@@ -470,22 +408,7 @@
     let currentPmTargetUid = null;
     let pmUnsubscribe = null;
 
-    let activeDrawerPostId = null;
-
-    // Modal Handlers
-    function openTermsModal() {
-      document.getElementById('termsModal').classList.remove('hidden');
-    }
-    function closeTermsModal() {
-      document.getElementById('termsModal').classList.add('hidden');
-    }
-
-    function openAdModal() {
-      document.getElementById('adModal').classList.remove('hidden');
-    }
-    function closeAdModal() {
-      document.getElementById('adModal').classList.add('hidden');
-    }
+    let activeDrawerPostId = null; // Active Drawer Tracking
 
     // XSS Security: Strict Text Sanitization (HTML Encoding Function)
     function escapeHTML(str) {
@@ -594,7 +517,6 @@
       const code = adminPasscodeInput.value.trim();
       if (code === ADMIN_PASSCODE) {
         isAdmin = true;
-        sessionStorage.setItem("kyawngar_admin", "true"); // Save Session
         adminBadge.classList.remove('hidden');
         adminModal.classList.add('hidden');
         showToast("🔑 Admin Access အောင်မြင်စွာ ခွင့်ပြုလိုက်ပါပြီ");
@@ -603,6 +525,7 @@
         showToast("❌ Admin Password မှားယွင်းနေပါသည်");
       }
     });
+
     const authModal = document.getElementById('authModal');
     const openAuthModalBtn = document.getElementById('openAuthModalBtn');
     const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
@@ -688,32 +611,26 @@
     logoutBtn.addEventListener('click', () => {
       auth.signOut();
       isAdmin = false;
-      sessionStorage.removeItem("kyawngar_admin"); // Clear Session
-      adminBadge.classList.add('hidden');
       showToast("အကောင့်မှ ထွက်လိုက်ပါပြီ");
     });
+
+    const profileFileInput = document.getElementById('profileFileInput');
 
     auth.onAuthStateChanged(async (user) => {
       currentUser = user;
       const chatInput = document.getElementById('chatInput');
       const chatSubmitBtn = document.getElementById('chatSubmitBtn');
 
-      // Sync Admin State
-      if (sessionStorage.getItem("kyawngar_admin") === "true") {
-        isAdmin = true;
-      }
-
       if (user) {
         openAuthModalBtn.classList.add('hidden');
         userInfo.classList.remove('hidden');
         
-        if (ADMIN_EMAILS.includes(user.email) || sessionStorage.getItem("kyawngar_admin") === "true") {
+        if (ADMIN_EMAILS.includes(user.email)) {
           isAdmin = true;
           adminBadge.classList.remove('hidden');
         } else {
           adminBadge.classList.add('hidden');
         }
-
         try {
           const userDoc = await db.collection("users").doc(user.uid).get();
           if (userDoc.exists) {
@@ -752,14 +669,7 @@
         uploadBtn.innerText = "တင်မည် (Login ဝင်ပါ)";
         currentUserCustomPhoto = "";
         currentUserName = "";
-
-        if (sessionStorage.getItem("kyawngar_admin") === "true") {
-          isAdmin = true;
-          adminBadge.classList.remove('hidden');
-        } else {
-          isAdmin = false;
-          adminBadge.classList.add('hidden');
-        }
+        isAdmin = false;
 
         if (chatInput) {
           chatInput.disabled = true;
@@ -799,6 +709,7 @@
       });
     });
 
+    // Search Box Functionality
     const searchInput = document.getElementById('searchInput');
     const clearSearchBtn = document.getElementById('clearSearchBtn');
 
@@ -866,8 +777,9 @@
             uploadBtn.disabled = false;
             return;
           }
-  }
-    const postData = {
+        }
+
+        const postData = {
           title: title,
           description: desc,
           category: cat,
@@ -899,24 +811,19 @@
       }
     });
 
-    // Delete Post (Fixed for Admin Key Override)
     async function deletePost(id, authorUid) {
-      const isPasscodeAdmin = sessionStorage.getItem("kyawngar_admin") === "true";
-      const isEmailAdmin = currentUser && ADMIN_EMAILS.includes(currentUser.email);
-      const isSystemAdmin = isAdmin || isPasscodeAdmin || isEmailAdmin;
+      if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
 
-      const isOwner = currentUser && (currentUser.uid === authorUid);
-
-      if (!isSystemAdmin && !isOwner) {
-        return showToast("⚠️ မိမိတင်ထားသော ပို့စ်များကိုသာ ဖျက်ပိုင်ခွင့်ရှိပါသည်။");
+      if (!isAdmin && currentUser.uid !== authorUid) {
+        return showToast("မိမိတင်ထားသော ပို့စ်များကိုသာ ဖျက်ပိုင်ခွင့်ရှိပါသည်။");
       }
 
-      if (confirm(isSystemAdmin ? "🛡️ Admin အဖြစ် ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?" : "ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?")) {
+      if (confirm(isAdmin ? "Admin အဖြစ် ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?" : "ဒီပို့စ်ကို ဖျက်ရန် သေချာပါသလား?")) {
         try {
           await db.collection("ads").doc(id).delete();
-          showToast("🗑️ ပို့စ်ကို ဖျက်ပြီးပါပြီ!");
+          showToast("ပို့စ်ကို ဖျက်ပြီးပါပြီ!");
         } catch (err) {
-          showToast("❌ ဖျက်ရာတွင် အမှားရှိပါသည်: " + err.message);
+          showToast("ဖျက်ရာတွင် အမှားရှိပါသည်: " + err.message);
         }
       }
     }
@@ -951,7 +858,6 @@
         showToast("ပြင်ဆင်ရာတွင် အမှားရှိပါသည်: " + err.message);
       }
     });
-
     async function toggleLike(postId, likesArray) {
       if (!currentUser) return showToast("Like ပေးရန် အကောင့်ဝင်ပါ!");
       const postRef = db.collection("ads").doc(postId);
@@ -964,7 +870,8 @@
       }
     }
 
-    // Comment Drawer System
+    // --- Bottom Sheet Comment Drawer System ---
+
     function openCommentDrawer(postId) {
       activeDrawerPostId = postId;
       document.getElementById('globalCommentDrawer').classList.add('open');
@@ -990,18 +897,14 @@
         return;
       }
 
-      const isPasscodeAdmin = sessionStorage.getItem("kyawngar_admin") === "true";
-      const isEmailAdmin = currentUser && ADMIN_EMAILS.includes(currentUser.email);
-      const isSystemAdmin = isAdmin || isPasscodeAdmin || isEmailAdmin;
-
       let html = comments.map(c => {
         const cId = c.id || ('c_' + Math.random().toString(36).substr(2, 4));
-        const canDeleteC = isSystemAdmin || (currentUser && currentUser.uid === c.userUid);
+        const canDeleteC = isAdmin || (currentUser && currentUser.uid === c.userUid);
         const replies = c.replies || [];
 
         let repliesList = replies.map(r => {
           const rId = r.id || ('r_' + Math.random().toString(36).substr(2, 4));
-          const canDeleteR = isSystemAdmin || (currentUser && currentUser.uid === r.userUid);
+          const canDeleteR = isAdmin || (currentUser && currentUser.uid === r.userUid);
 
           return `
             <div class="text-[10px] bg-slate-200/60 p-1.5 rounded-lg flex items-start justify-between gap-1 mt-1 border-l-2 border-blue-400">
@@ -1035,6 +938,7 @@
 
             ${repliesList ? `<div class="pl-3 space-y-1">${repliesList}</div>` : ''}
 
+            <!-- Hidden Reply Input Box -->
             <div id="reply-box-${escapeHTML(postId)}-${escapeHTML(cId)}" class="hidden pt-1.5 pl-3">
               <form onsubmit="addReply('${escapeJsParam(postId)}', '${escapeJsParam(cId)}', event)" class="flex gap-1">
                 <input type="text" placeholder="Reply ပြန်ရန် စာရိုက်ပါ..." class="flex-1 border p-1 rounded-lg text-[10px] outline-none focus:ring-1 focus:ring-blue-500 bg-white">
@@ -1048,6 +952,7 @@
       listContainer.innerHTML = html;
     }
 
+    // Add Main Comment from Drawer
     document.getElementById('drawerCommentForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!currentUser) return showToast("Comment ရေးရန် အကောင့်ဝင်ပါ!");
@@ -1081,11 +986,15 @@
       }
     });
 
+    // Toggle Reply Box Inside Drawer
     function toggleReplyBox(postId, commentId) {
       const replyBox = document.getElementById(`reply-box-${postId}-${commentId}`);
-      if (replyBox) replyBox.classList.toggle('hidden');
+      if (replyBox) {
+        replyBox.classList.toggle('hidden');
+      }
     }
 
+    // Add Reply & Close Drawer Automatically
     async function addReply(postId, commentId, e) {
       e.preventDefault();
       if (!currentUser) return showToast("Reply ပြန်ရန် အကောင့်ဝင်ပါ!");
@@ -1127,14 +1036,14 @@
       } catch (err) {
         showToast("Reply ပို့ရာတွင် အမှားရှိပါသည်: " + err.message);
       }
-        }
-    async function deleteCommentOrReply(postId, commentId, replyId = null, authorUid) {
-      const isPasscodeAdmin = sessionStorage.getItem("kyawngar_admin") === "true";
-      const isEmailAdmin = currentUser && ADMIN_EMAILS.includes(currentUser.email);
-      const isSystemAdmin = isAdmin || isPasscodeAdmin || isEmailAdmin;
+    }
 
-      const isOwner = currentUser && (currentUser.uid === authorUid);
-      if (!isSystemAdmin && !isOwner) {
+    // Delete Main Comment or Nested Reply
+    async function deleteCommentOrReply(postId, commentId, replyId = null, authorUid) {
+      if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
+
+      const isOwner = currentUser.uid === authorUid;
+      if (!isAdmin && !isOwner) {
         return showToast("မိမိရေးထားသော Comment များကိုသာ ဖျက်ခွင့်ရှိပါသည်။");
       }
 
@@ -1182,7 +1091,6 @@
       renderAdsData(allAdsCache);
       if (activeDrawerPostId) renderDrawerComments(activeDrawerPostId);
     });
-
     function renderAdsData(ads) {
       let feedHtml = "", reelsHtml = "", paidHtml = "";
 
@@ -1195,11 +1103,7 @@
         return matchesSearch && matchesTag;
       });
 
-      const isPasscodeAdmin = sessionStorage.getItem("kyawngar_admin") === "true";
-      const isEmailAdmin = currentUser && ADMIN_EMAILS.includes(currentUser.email);
-      const isSystemAdmin = isAdmin || isPasscodeAdmin || isEmailAdmin;
-
-      filtered.forEach((data, index) => {
+      filtered.forEach((data) => {
         const cat = data.category || 'feed';
         const likes = data.likes || [];
         const comments = data.comments || [];
@@ -1266,7 +1170,7 @@
           : `<div onclick="openPrivateChat('${escapeJsParam(data.authorUid)}', '${escapeJsParam(data.authorName || 'User')}', '')" class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] cursor-pointer" title="Messenger မှတစ်ဆင့် စာပို့ပါ">👤</div>`;
         
         const isOwner = currentUser && (currentUser.uid === data.authorUid);
-        const canDelete = isSystemAdmin || isOwner;
+        const canDelete = isAdmin || isOwner;
         const canEdit = isOwner;
 
         const totalCommentCount = comments.reduce((acc, curr) => acc + 1 + (curr.replies ? curr.replies.length : 0), 0);
@@ -1304,19 +1208,7 @@
           </div>
         `;
 
-        const adNetworkBannerUnit = `
-          <div class="bg-amber-50/60 border border-amber-200/70 rounded-xl p-2.5 text-center my-2 shadow-sm">
-            <span class="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider inline-block mb-1">Sponsored Ad / Monetization</span>
-            <div id="monetization-ad-unit-${index}" class="text-xs text-slate-500 min-h-[50px] flex items-center justify-center border border-dashed border-amber-300 rounded bg-white">
-              📢 ဝင်ငွေရရှိမည့် စပွန်ဆာ ကြော်ငြာနေရာ
-            </div>
-          </div>
-        `;
-
-        if (cat === 'feed') {
-          feedHtml += card;
-          if ((index + 1) % 3 === 0) feedHtml += adNetworkBannerUnit;
-        }
+        if (cat === 'feed') feedHtml += card;
         if (cat === 'reels') reelsHtml += card;
         if (cat === 'ads') paidHtml += card;
       });
@@ -1328,13 +1220,12 @@
       if (window.tiktokEmbed) window.tiktokEmbed.load();
     }
 
+    // Public Chat Message Deletion
     async function deleteChatMessage(chatId, senderUid) {
-      const isPasscodeAdmin = sessionStorage.getItem("kyawngar_admin") === "true";
-      const isEmailAdmin = currentUser && ADMIN_EMAILS.includes(currentUser.email);
-      const isSystemAdmin = isAdmin || isPasscodeAdmin || isEmailAdmin;
+      if (!currentUser) return showToast("Login ဝင်ထားရန် လိုအပ်ပါသည်။");
 
-      const isOwner = currentUser && (currentUser.uid === senderUid);
-      if (!isSystemAdmin && !isOwner) {
+      const isOwner = currentUser.uid === senderUid;
+      if (!isAdmin && !isOwner) {
         return showToast("Admin မဟုတ်ပါက မိမိစာများကိုသာ ဖျက်နိုင်ပါမည်။");
       }
 
@@ -1381,13 +1272,9 @@
       snapshot.forEach(doc => messages.unshift({ id: doc.id, ...doc.data() }));
 
       let html = "";
-      const isPasscodeAdmin = sessionStorage.getItem("kyawngar_admin") === "true";
-      const isEmailAdmin = currentUser && ADMIN_EMAILS.includes(currentUser.email);
-      const isSystemAdmin = isAdmin || isPasscodeAdmin || isEmailAdmin;
-
       messages.forEach(c => {
         const isMe = currentUser && (currentUser.uid === c.senderUid);
-        const canDeleteChat = isSystemAdmin || isMe;
+        const canDeleteChat = isAdmin || isMe;
 
         const photo = c.senderPhoto 
           ? `<img src="${escapeHTML(c.senderPhoto)}" onclick="openPrivateChat('${escapeJsParam(c.senderUid)}', '${escapeJsParam(c.sender)}', '${escapeJsParam(c.senderPhoto)}')" class="w-5 h-5 rounded-full inline object-cover cursor-pointer">` 
@@ -1482,8 +1369,7 @@
           pmBox.innerHTML = html || '<p class="text-center text-slate-400 text-[11px]">စကားစတင် ပြောဆိုပါ...</p>';
           pmBox.scrollTop = pmBox.scrollHeight;
         });
-    }
-
+      }
     document.getElementById('backToInboxBtn').addEventListener('click', () => {
       document.getElementById('messengerChatView').classList.add('hidden');
       if (pmUnsubscribe) pmUnsubscribe();
@@ -1524,7 +1410,7 @@
       }
     });
 
-     function loadPrivateChatList() {
+    function loadPrivateChatList() {
       if (!currentUser) return;
 
       db.collection("users").doc(currentUser.uid).collection("threads").orderBy("updatedAt", "desc").onSnapshot(async (snapshot) => {
@@ -1550,3 +1436,4 @@
   </script>
 </body>
 </html>
+    
